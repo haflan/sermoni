@@ -1,0 +1,91 @@
+<!-- Prototype -->
+
+<html>
+    <head>
+        <meta name="viewport" 
+              content="width=device-width,initial-scale=1,user-scalable=no">
+        <link rel="stylesheet" type="text/css" href="style.css"></link>
+        <script src="https://unpkg.com/vue"></script>
+    </head>
+    <body>
+        <div id="app" style="padding: 0">
+            <header> 
+                    Service Monitor
+            </header>
+            <main>
+                <div v-for="e in events">
+                    <div class="list-item"
+                         style="display: flex;"
+                        :style="e.style">
+                        <div>{{ e.service }}</div>
+                        <div>{{ e.title }}</div>
+                    </div>
+                    <div v-show="false"> more info here </div>
+                </div>
+            <main>
+        </div>
+
+        <script>
+            var app = new Vue({
+                el: "#app",
+                data: {
+                    testdata: [{
+                        service: "backup-files @ haflan.dev",
+                        timestamp: 1586459792925,
+                        title: "Server reported success",
+                        status: "ok"
+                    },{
+                        service: "backup-gitlab @ haflan.dev",
+                        timestamp: 1586459793155,
+                        title: "Server reported success",
+                        status: "ok"
+                    },{
+                        service: "backup-qumps @ haflan.dev",
+                        timestamp: 1586459793285,
+                        status: "warning",
+                        title: "Memory almost full",
+                        message: "df -h reports that less than 1GB is available"
+                    },{
+                        service: "backup-offsite @ work-computer",
+                        timestamp: 1586459794385,
+                        status: "error",
+                        title: "Expectation not met" // These are read from a default title thingy
+                    },{
+                        service: "ssh @ haflan.dev",
+                        timestamp: 1586459794385,
+                        status: "info",
+                        title: "SSH server login",
+                        message: "User vetle logged in from IP 192.168.10.105"
+                    }],
+                    statusStyling: {
+                        "ok": { color: "#000", backgroundColor: "#c3e6cb" },
+                        "warning": { color: "#000", backgroundColor: "#ffeeba" },
+                        "error": { color: "#000", backgroundColor: "#f5c6cb" },
+                        "info": { color: "#000", backgroundColor: "#fff" }
+                    }
+                },
+                methods: {
+                    statusStyle(status) {
+                        const style = this.statusStyling[status];
+                        if (style) {
+                            return style;
+                        } else {
+                            return { color: "#fff", backgroundColor: "#000" };
+                        }
+                    }
+                },
+                computed: {
+                    events() {
+                        return this.testdata.map(e => {
+                            return {
+                                ...e,
+                                style: this.statusStyle(e.status)
+                            };
+                        });
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
+
