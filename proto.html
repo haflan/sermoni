@@ -11,18 +11,22 @@
     <body>
         <div id="app" style="padding: 0">
             <header> 
-                <div style="float: left;">Service Monitor</div>
-                <div style="float: right;">S</div>
+                <div id="bar">
+                    <div style="font-family: Helvetica; font-size: 1.5em; color: #555 ">&gt; sermoni</div> <!-- color #bbf instead? -->
+                    <div style="margin-left: auto;">
+                        <img src="/eye.png" style="height: 3em; opacity: 0.3;">
+                    </div>
+                </div>
             </header>
             <main>
                 <div class="events-wrapper">
                     <div v-for="e in events">
-                        <div class="list-item"
+                        <div class="event"
                              style="display: flex;"
                             :style="e.style">
-                            <div>{{ e.service }}</div>
+                            <div class="event-field">{{ e.service }}</div>
                             <mq-layout mq="md+">
-                                <div>{{ e.title }}</div>
+                                <div class="event-field">{{ e.title }}</div>
                             </mq-layout>
                         </div>
                         <div v-show="false"> more info here </div>
