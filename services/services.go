@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	keyServiceID          = []byte("id")
 	keyServiceName        = []byte("name")
 	keyServiceDescription = []byte("description")
 	keyServicePeriod      = []byte("period")
@@ -17,67 +18,104 @@ var (
 
 // Service describes a service that is expected to report
 type Service struct {
+	ID                uint64 `json:"id"`          // service id, an integer that represents the service
 	Name              string `json:"name"`        // service name, usually on the format 'service @ server'
 	Description       string `json:"description"` // more detailed description of the service
 	ExpectationPeriod uint64 `json:"period"`      // set if the service is expected to report periodically, format is UnixTime (milli?)
 }
 
-// Get returns a service struct if the identifier matches any
-// keys in the services bucket. Returns nil if there are no matching buckets
-func Get(identifier string) *Service {
-	var service Service
-	err := database.BucketView(database.BucketKeyServices, func(b *bbolt.Bucket) error {
-		sb := b.Bucket([]byte(identifier))
-		if sb == nil {
-			return errors.New("no bucket found for the given id")
-		}
-		if name := sb.Get(keyServiceName); name != nil {
-			service.Name = string(name)
-		}
-		if description := sb.Get(keyServiceDescription); description != nil {
-			service.Description = string(description)
-		}
-		if period := sb.Get(keyServicePeriod); period != nil {
-			// Quick fix: Convert to string, then int
-			// Uses default value 0 if an error occurs
-			intPeriod, err := strconv.ParseUint(string(period), 10, 64)
-			if err != nil {
-				service.ExpectationPeriod = intPeriod
-				log.Printf("Couldn't convert period to int for service with id '%v'\n", identifier)
-			} else {
-				service.ExpectationPeriod = 0
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		log.Println(err)
+
+// GetByToken returns the service structure associated with the token string, if there
+// are any matching entries in service-tokens bucket. Returns nil if there are no matches
+func GetByToken(token string) *Service {
+	id := getIDFromToken(token)
+	if id == nil {
+		log.Printf("No service found for the token '%v'\n", token)
 		return nil
 	}
-	return &service
+	return get(id)
+}
+
+// GetByID returns the service structure associated with the given uint64-formatted
+// service ID, if that service exists. Otherwise returns nil
+func GetByID(id uint64) *Service {
+	return get([]byte(strconv.FormatUint(id, 10)))
+}
+
+// GetAll returns all services in the database (TODO)
+func GetAll() []*Service {
+	db := database.GetDB()
+	var services []*Service
+	db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(database.BucketKeyServices)
+		stb := tx.Bucket(database.BucketKeyServiceTokens)
+		if b == nil {
+			log.Panic("The services bucket does not exist")
+		}
+		if stb == nil {
+			log.Panic("The service-tokens bucket does not exist")
+		}
+
+		// Go through all k-v pairs in the service *tokens* bucket, in order to get service bucket IDs
+		// Use the ID to get the service bucket and create service fromBucket
+		return stb.ForEach(func(_, id []byte) error {
+			sb := b.Bucket(id)
+			service := new(Service)
+			service.fromBucket(id, sb)
+			services = append(services, service)
+			return nil
+		})
+	})
+	return services
 }
 
 // Delete deletes the given service if it exists
-func Delete(identifier string) error {
-	return database.BucketUpdate(database.BucketKeyServices, func(b *bbolt.Bucket) error {
-		serviceKey := []byte(identifier)
-		if b.Bucket(serviceKey) == nil {
+func Delete(intID uint64) error {
+	db := database.GetDB()
+	id := []byte(strconv.FormatUint(intID, 10))
+	return db.Update(func(tx *bbolt.Tx) error {
+		var b *bbolt.Bucket
+		if b = tx.Bucket(database.BucketKeyServices); b == nil {
+			log.Panic("The services bucket does not exist")
+		}
+		if b.Bucket(id) == nil {
 			return errors.New("no service for the given id")
 		}
-		return b.DeleteBucket(serviceKey)
+		return b.DeleteBucket(id)
 	})
 }
 
 // Add adds a new service to monitor
-func Add(identifier string, service Service) error {
-	return database.BucketUpdate(database.BucketKeyServices, func(b *bbolt.Bucket) error {
-		serviceKey := []byte(identifier)
-		if b.Bucket(serviceKey) != nil {
-			return errors.New("a service has already been registered for the given id")
+// Returns error if the token is unavailable and if the transaction fails in any way
+func Add(token string, service Service) error {
+	db := database.GetDB()
+	return db.Update(func(tx *bbolt.Tx) error {
+		var err error
+		var b, sb, stb *bbolt.Bucket
+		var serviceIDint uint64
+		var serviceID []byte
+
+		// Get the services root bucket
+		if b = tx.Bucket(database.BucketKeyServices); b == nil {
+			log.Panic("The services bucket does not exist")
 		}
-		// Create the service bucket, sb
-		sb, err := b.CreateBucket(serviceKey)
-		if err != nil {
+		// Get the service-tokens root bucket
+		if stb = tx.Bucket(database.BucketKeyServiceTokens); stb == nil {
+			log.Panic("The service-tokens bucket does not exist")
+		}
+
+		// Check if the service token is available, return error otherwise
+		serviceToken := []byte(token)
+		if serviceID = stb.Get(serviceToken); serviceID != nil {
+			return errors.New("a service has already been registered for the given token")
+		}
+
+		// Create a new service bucket, sb, and populate it with data from service
+		if serviceIDint, err = b.NextSequence(); err != nil {
+			return err
+		}
+		serviceID = []byte(strconv.FormatUint(serviceIDint, 10))
+		if sb, err = b.CreateBucket(serviceID); err != nil {
 			return err
 		}
 		if err = sb.Put(keyServiceName, []byte(service.Name)); err != nil {
@@ -90,6 +128,80 @@ func Add(identifier string, service Service) error {
 		if err = sb.Put(keyServicePeriod, []byte(periodStr)); err != nil {
 			return err
 		}
+
+		// Put an entry in the service-tokens bucket to map the token to the service
+		return stb.Put([]byte(token), serviceID)
+	})
+}
+
+
+
+//
+// Package-local helpers
+//
+
+// fromBucket populates the service struct with data from the given service bucket
+func (service *Service) fromBucket(id []byte, sb *bbolt.Bucket) {
+	// Ignoring this error, because it shouldn't be possible
+	idInt, _ := strconv.ParseUint(string(id), 10, 64)
+	service.ID = idInt
+	if name := sb.Get(keyServiceName); name != nil {
+		service.Name = string(name)
+	}
+	if description := sb.Get(keyServiceDescription); description != nil {
+		service.Description = string(description)
+	}
+	if period := sb.Get(keyServicePeriod); period != nil {
+		// Quick fix: Convert to string, then int
+		// Uses default value 0 if an error occurs
+		intPeriod, err := strconv.ParseUint(string(period), 10, 64)
+		if err != nil {
+			service.ExpectationPeriod = intPeriod
+			log.Printf("Couldn't convert period to int for service")
+		} else {
+			service.ExpectationPeriod = 0
+		}
+	}
+}
+
+// get returns the service structure associated with the []byte-formatted service ID
+func get(id []byte) *Service {
+	var service Service
+	db := database.GetDB()
+	err := db.View(func(tx *bbolt.Tx) error {
+
+		// Get the root services bucket and the requested service bucket
+		var b, sb *bbolt.Bucket
+		if b = tx.Bucket(database.BucketKeyServices); b == nil {
+			log.Panic("The services bucket does not exist")
+		}
+		if sb = b.Bucket(id); sb == nil {
+			return errors.New("no service found for the given id")
+		}
+
+		// Get service information from the bucket
+		service.fromBucket(id, sb)
 		return nil
 	})
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return &service
+}
+
+// getIDFromToken looks up the given token in the service-tokens bucket and returns
+// the ID if it's found, otherwise returning nil
+func getIDFromToken(token string) []byte {
+	var id []byte
+	db := database.GetDB()
+	db.View(func(tx *bbolt.Tx) error {
+		stb := tx.Bucket(database.BucketKeyServiceTokens)
+		if stb == nil {
+			log.Panic("The service-tokens bucket does not exist")
+		}
+		id = stb.Get([]byte(token))
+		return nil
+	})
+	return id
 }

@@ -17,9 +17,10 @@ const (
 
 // bbolt keys
 var (
-	BucketKeyConfig   = []byte("config")   // bucket key for config bucket key
-	BucketKeyServices = []byte("services") // bucket key for services bucket
-	BucketKeyEvents   = []byte("events")   // bucket key for events bucket
+	BucketKeyConfig        = []byte("config")         // bucket key for config bucket key
+	BucketKeyEvents        = []byte("events")         // bucket key for events bucket
+	BucketKeyServices      = []byte("services")       // bucket key for services bucket
+	BucketKeyServiceTokens = []byte("service-tokens") // bucket key for service-tokens bucket
 
 	keyPassHash  = []byte("passhash")
 	keyPageTitle = []byte("pagetitle")
@@ -49,6 +50,9 @@ func Init(dbFileName string) error {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists(BucketKeyEvents); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists(BucketKeyServiceTokens); err != nil {
 			return err
 		}
 		return nil
@@ -118,34 +122,7 @@ func Close() {
 	db.Close()
 }
 
-// BucketOperation operates on the given (root level) bucket if it exists, using the
-// DB.Update function if update is set true, otherwise using DB.View.
-// An error is returned if no bucket can be found for the bucketKey or any other
-// error occurs in the wrapped transaction
-func bucketOperation(update bool, bucketKey []byte, fn func(*bbolt.Bucket) error) error {
-	var operation func(func(*bbolt.Tx) error) error
-	if update {
-		operation = db.Update
-	} else {
-		operation = db.View
-	}
-	return operation(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket(bucketKey)
-		if bucket == nil {
-			return errors.New("the given bucket does not exist")
-		}
-		return fn(bucket)
-	})
-}
-
-// BucketUpdate wraps DB.Update with a general way of handling errors
-// if the bucket does not exist
-func BucketUpdate(bucketKey []byte, fn func(*bbolt.Bucket) error) error {
-	return bucketOperation(true, bucketKey, fn)
-}
-
-// BucketView wraps DB.View with a general way of handling errors
-// if the bucket does not exist
-func BucketView(bucketKey []byte, fn func(*bbolt.Bucket) error) error {
-	return bucketOperation(true, bucketKey, fn)
+// GetDB gets the database structure
+func GetDB() *bbolt.DB {
+	return db
 }
