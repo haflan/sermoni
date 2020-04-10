@@ -103,7 +103,7 @@ func Delete(intID uint64) error {
 
 // Add adds a new service to monitor
 // Returns error if the token is unavailable and if the transaction fails in any way
-func Add(token string, service Service) error {
+func Add(token string, service *Service) error {
 	db := database.GetDB()
 	return db.Update(func(tx *bbolt.Tx) error {
 		var err error
