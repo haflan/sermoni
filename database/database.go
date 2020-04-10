@@ -77,7 +77,7 @@ func Init(dbFileName string) error {
 // generates hash for the password and updates the database with this
 // new configuration.
 func Reconfigure(passphrase string, pageTitle string) error {
-
+	// TODO: Maybe this belongs elsewhere?
 	/* TODO: Generate a random _readable_ password if none is given
 	var passphraseBytes []byte
 	if passphrase == "" {
@@ -118,8 +118,34 @@ func Close() {
 	db.Close()
 }
 
-// GetDB returns the bbolt database struct
-// TODO: Not sure how if this is a good way to do it, although it does seem to work
-func GetDB() *bbolt.DB {
-	return db
+// BucketOperation operates on the given (root level) bucket if it exists, using the
+// DB.Update function if update is set true, otherwise using DB.View.
+// An error is returned if no bucket can be found for the bucketKey or any other
+// error occurs in the wrapped transaction
+func bucketOperation(update bool, bucketKey []byte, fn func(*bbolt.Bucket) error) error {
+	var operation func(func(*bbolt.Tx) error) error
+	if update {
+		operation = db.Update
+	} else {
+		operation = db.View
+	}
+	return operation(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket(bucketKey)
+		if bucket == nil {
+			return errors.New("the given bucket does not exist")
+		}
+		return fn(bucket)
+	})
+}
+
+// BucketUpdate wraps DB.Update with a general way of handling errors
+// if the bucket does not exist
+func BucketUpdate(bucketKey []byte, fn func(*bbolt.Bucket) error) error {
+	return bucketOperation(true, bucketKey, fn)
+}
+
+// BucketView wraps DB.View with a general way of handling errors
+// if the bucket does not exist
+func BucketView(bucketKey []byte, fn func(*bbolt.Bucket) error) error {
+	return bucketOperation(true, bucketKey, fn)
 }

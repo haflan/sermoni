@@ -24,24 +24,20 @@ type Service struct {
 
 // Get returns a service struct if the identifier matches any
 // keys in the services bucket. Returns nil if there are no matching buckets
-func Get(identifier string) (service Service) {
-	db := database.GetDB()
-	err := db.View(func(tx *bbolt.Tx) error {
-		serviceBucket := tx.Bucket(database.BucketKeyServices)
-		if serviceBucket == nil {
-			log.Fatal("No services bucket found")
-		}
-		b := serviceBucket.Bucket([]byte(identifier))
-		if b == nil {
+func Get(identifier string) *Service {
+	var service Service
+	err := database.BucketView(database.BucketKeyServices, func(b *bbolt.Bucket) error {
+		sb := b.Bucket([]byte(identifier))
+		if sb == nil {
 			return errors.New("no bucket found for the given id")
 		}
-		if name := b.Get(keyServiceName); name != nil {
+		if name := sb.Get(keyServiceName); name != nil {
 			service.Name = string(name)
 		}
-		if description := b.Get(keyServiceDescription); description != nil {
+		if description := sb.Get(keyServiceDescription); description != nil {
 			service.Description = string(description)
 		}
-		if period := b.Get(keyServicePeriod); period != nil {
+		if period := sb.Get(keyServicePeriod); period != nil {
 			// Quick fix: Convert to string, then int
 			// If an error occurs (it tho)
 			if intPeriod, err := strconv.Atoi(string(period)); err != nil {
@@ -55,43 +51,44 @@ func Get(identifier string) (service Service) {
 	})
 	if err != nil {
 		log.Println(err)
+		return nil
 	}
-	return service
+	return &service
 }
 
 // Delete deletes the given service if it exists
-func Delete(identifier string) {
-	//db := database.GetDB()
+func Delete(identifier string) error {
+	return database.BucketUpdate(database.BucketKeyServices, func(b *bbolt.Bucket) error {
+		serviceKey := []byte(identifier)
+		if b.Bucket(serviceKey) == nil {
+			return errors.New("no service for the given id")
+		}
+		return b.DeleteBucket(serviceKey)
+	})
 }
 
 // Add adds a new service to monitor
 func Add(identifier string, service Service) error {
-	db := database.GetDB()
-	return db.Update(func(tx *bbolt.Tx) error {
-		serviceBucket := tx.Bucket(database.BucketKeyServices)
-		if serviceBucket == nil {
-			log.Fatal("No services bucket found")
-		}
+	return database.BucketUpdate(database.BucketKeyServices, func(b *bbolt.Bucket) error {
 		serviceKey := []byte(identifier)
-		if serviceBucket.Bucket(serviceKey) != nil {
+		if b.Bucket(serviceKey) != nil {
 			return errors.New("a service has already been registered for the given id")
 		}
-		b, err := serviceBucket.CreateBucket(serviceKey)
+		// Create the service bucket, sb
+		sb, err := b.CreateBucket(serviceKey)
 		if err != nil {
 			return err
 		}
-		if err = b.Put(keyServiceName, []byte(service.Name)); err != nil {
+		if err = sb.Put(keyServiceName, []byte(service.Name)); err != nil {
 			return err
 		}
-		if err = b.Put(keyServiceDescription, []byte(service.Description)); err != nil {
+		if err = sb.Put(keyServiceDescription, []byte(service.Description)); err != nil {
 			return err
 		}
 		periodStr := strconv.Itoa(service.ExpectationPeriod)
-		if err = b.Put(keyServicePeriod, []byte(periodStr)); err != nil {
+		if err = sb.Put(keyServicePeriod, []byte(periodStr)); err != nil {
 			return err
 		}
 		return nil
 	})
 }
-
-// TODO: Consider a wrapper that gets the services bucket and operates on it

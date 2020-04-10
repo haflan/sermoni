@@ -23,6 +23,8 @@ func main() {
 		Name:        "Test name",
 		Description: "This is the description, yay",
 	})
-	testService := services.Get("testing")
-	fmt.Printf("test service: %+v\n", testService)
+	fmt.Printf("ADD ERR: %v\n", services.Add("testing", services.Service{Name: "This"}))
+	fmt.Printf("none service: %+v\n", services.Get("none"))
+	fmt.Printf("DELETE ERR: %v\n", services.Delete("none"))
+	fmt.Printf("test service: %+v\n", services.Get("testing"))
 }
