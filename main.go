@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"sermoni/database"
+	"sermoni/services"
 )
 
 func main() {
@@ -12,9 +14,15 @@ func main() {
 	dbFile := flag.String("d", "sermoni.db", "Database file")
 	//password := flag.String("w", "", "Password for the web interface")
 	flag.Parse()
-	if err := initDB(*dbFile); err != nil {
+	if err := database.Init(*dbFile); err != nil {
 		log.Fatal(err)
 	}
-	defer closeDB()
-	fmt.Printf("Server running on port %v", *port)
+	defer database.Close()
+	fmt.Printf("Server running on port %v\n", *port)
+	services.Add("testing", services.Service{
+		Name:        "Test name",
+		Description: "This is the description, yay",
+	})
+	testService := services.Get("testing")
+	fmt.Printf("test service: %+v\n", testService)
 }
