@@ -72,16 +72,32 @@ func GetAll() []*Service {
 // Delete deletes the given service if it exists
 func Delete(intID uint64) error {
 	db := database.GetDB()
-	id := []byte(strconv.FormatUint(intID, 10))
+	serviceID := []byte(strconv.FormatUint(intID, 10))
 	return db.Update(func(tx *bbolt.Tx) error {
-		var b *bbolt.Bucket
+		var b, stb *bbolt.Bucket
 		if b = tx.Bucket(database.BucketKeyServices); b == nil {
 			log.Panic("The services bucket does not exist")
 		}
-		if b.Bucket(id) == nil {
+		if stb = tx.Bucket(database.BucketKeyServiceTokens); b == nil {
+			log.Panic("The service-tokens bucket does not exist")
+		}
+
+		// Delete the entry from root services bucket
+		if b.Bucket(serviceID) == nil {
 			return errors.New("no service for the given id")
 		}
-		return b.DeleteBucket(id)
+		if err := b.DeleteBucket(serviceID); err != nil { 
+			return err
+		}
+
+		// Find the token entry and delete it from service-tokens bucket
+		c := stb.Cursor()
+		for token, id := c.First(); token != nil; token, id = c.Next() {
+			if string(id) == string(serviceID) {
+				return stb.Delete(token)
+			}
+		}
+		return errors.New("service id not found in the service-tokens bucket")
 	})
 }
 
@@ -155,10 +171,10 @@ func (service *Service) fromBucket(id []byte, sb *bbolt.Bucket) {
 		// Quick fix: Convert to string, then int
 		// Uses default value 0 if an error occurs
 		intPeriod, err := strconv.ParseUint(string(period), 10, 64)
-		if err != nil {
+		if err == nil {
 			service.ExpectationPeriod = intPeriod
-			log.Printf("Couldn't convert period to int for service")
 		} else {
+			log.Println("Couldn't convert period to int for service")
 			service.ExpectationPeriod = 0
 		}
 	}

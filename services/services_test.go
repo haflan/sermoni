@@ -27,9 +27,11 @@ func TestAddService(t *testing.T) {
 		ExpectationPeriod: 282342,
 	})
 	if err != nil {
+		fmt.Println(err)
 		t.Fatal("unexpected error when adding service")
 	}
 	if err = Add(token2, Service{Name: "tester2"}); err != nil {
+		fmt.Println(err)
 		t.Fatal("unexpected error when adding second service")
 	}
 	if err = Add(token2, Service{Name: "another tester"}); err == nil {
@@ -39,24 +41,19 @@ func TestAddService(t *testing.T) {
 	if err != nil {
 		t.Fatal("unexpected error when adding third service")
 	}
-
-	/*
-		// Add new
-		fmt.Printf("DELETE ERR: %v\n", services.Delete(
-			services.IntID(services.GetIDFromToken("token1"))))
-		fmt.Printf("ADD ERR: %v\n", services		fmt.Printf("ADD ERR: %v\n", services.Add("token2", services.Service{Name: "This"}))
-		fmt.Printf("ADD ERR: %v\n", services.Add("token2", services.Service{Name: "This again"}))
-		fmt.Printf("token1: %+v\n", services.GetByToken("token1"))
-		fmt.Printf("DELETE ERR: %v\n", services.Delete(
-			services.IntID(services.GetIDFromToken("token1"))))
-		fmt.Printf("token1: %+v\n", services.GetByToken("token1"))
-		fmt.Printf("DELETE ERR: %v\n", services.Delete(
-			services.IntID(services.GetIDFromToken("token1"))))
-	*/
 }
 
+
 func TestDeleteService(t *testing.T) {
-	return
+	// bbolt should always start ID sequences on 1, so hard coding IDs should be fine
+	err := Delete(2)
+	if err != nil {
+		fmt.Println(err)
+		t.Fatal("unexpected error when trying to delete service")
+	}
+	if err = Delete(2); err == nil {
+		t.Fatal("no error returned when trying to delete non-existing service")
+	}
 }
 
 func TestGetAll(t *testing.T) {
