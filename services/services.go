@@ -19,7 +19,7 @@ var (
 type Service struct {
 	Name              string `json:"name"`        // service name, usually on the format 'service @ server'
 	Description       string `json:"description"` // more detailed description of the service
-	ExpectationPeriod int    `json:"period"`      // set if the service is expected to report periodically, format is UnixTime (milli?)
+	ExpectationPeriod uint64 `json:"period"`      // set if the service is expected to report periodically, format is UnixTime (milli?)
 }
 
 // Get returns a service struct if the identifier matches any
@@ -39,8 +39,9 @@ func Get(identifier string) *Service {
 		}
 		if period := sb.Get(keyServicePeriod); period != nil {
 			// Quick fix: Convert to string, then int
-			// If an error occurs (it tho)
-			if intPeriod, err := strconv.Atoi(string(period)); err != nil {
+			// Uses default value 0 if an error occurs
+			intPeriod, err := strconv.ParseUint(string(period), 10, 64)
+			if err != nil {
 				service.ExpectationPeriod = intPeriod
 				log.Printf("Couldn't convert period to int for service with id '%v'\n", identifier)
 			} else {
@@ -85,7 +86,7 @@ func Add(identifier string, service Service) error {
 		if err = sb.Put(keyServiceDescription, []byte(service.Description)); err != nil {
 			return err
 		}
-		periodStr := strconv.Itoa(service.ExpectationPeriod)
+		periodStr := strconv.FormatUint(service.ExpectationPeriod, 10)
 		if err = sb.Put(keyServicePeriod, []byte(periodStr)); err != nil {
 			return err
 		}

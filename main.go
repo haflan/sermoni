@@ -20,8 +20,9 @@ func main() {
 	defer database.Close()
 	fmt.Printf("Server running on port %v\n", *port)
 	services.Add("testing", services.Service{
-		Name:        "Test name",
-		Description: "This is the description, yay",
+		Name:              "Test name",
+		Description:       "This is the description, yay",
+		ExpectationPeriod: 282342,
 	})
 	fmt.Printf("ADD ERR: %v\n", services.Add("testing", services.Service{Name: "This"}))
 	fmt.Printf("none service: %+v\n", services.Get("none"))
