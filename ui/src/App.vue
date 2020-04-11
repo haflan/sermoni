@@ -3,40 +3,49 @@
         <header> 
             <div id="bar">
                 <div style="font-size: 1.5em; color: #bbf">&gt; sermoni</div> 
-                <!-- color #bbf instead? -->
-                <div style="margin-left: auto;">
-                    <img src="dist/eye.png" 
-                         @click="togglePage"
-                         style="height: 3em; opacity: 0.3;">
+                <div @click="togglePage" style="margin-left: auto;">
+                    <Eye :service-view="this.serviceView"/>
                 </div>
             </div>
         </header>
         <main>
-            <component :is="page"/>
+            <component :is="page" @login="login"/>
         </main>
     </div>
 </template>
 
 <script>
+    import Eye from "./Eye.vue";
+    import Login from "./Login.vue";
     import Events from "./Events.vue";
     import Services from "./Services.vue";
     export default {
         name: "App",
-        components: {Events, Services},
+        components: {Login, Eye, Events, Services},
         data() {
             return {
-                page: Events,
+                page: Login,
+                serviceView: false
             };
         },
         methods: {
+            login() {
+                this.page = Events;
+            },
             togglePage() {
                 // Should do nothing when on login page
                 if (this.page === Events) {
                     this.page = Services;
+                    this.serviceView = true;
                 } else if (this.page === Services) {
                     this.page = Events;
+                    this.serviceView = false;
                 }
             }
+        },
+        mounted() {
+            // TODO: Send request to server to figure out if an authenticated
+            //       session is active
         }
     }
 </script>

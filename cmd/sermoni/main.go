@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sermoni/internal/database"
+	smhttp "sermoni/internal/http"
 )
 
 var (
@@ -16,9 +17,10 @@ func main() {
 	// TODO: Use getopt package instead of flags?
 	//password := flag.String("w", "", "Password for the web interface")
 	flag.Parse()
+	defer database.Close()
 	if err := database.Init(*dbFile); err != nil {
 		log.Fatal(err)
 	}
-	defer database.Close()
 	fmt.Printf("Server running on port %v\n", *port)
+	smhttp.StartServer(*port)
 }
