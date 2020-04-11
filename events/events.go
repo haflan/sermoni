@@ -2,6 +2,7 @@ package events
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"sermoni/database"
 	"sermoni/services"
@@ -32,7 +33,7 @@ type Event struct {
 // GetAll returns all events in the database
 func GetAll() (events []*Event) {
 	db := database.GetDB()
-	db.View(func(tx *bbolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(database.BucketKeyEvents)
 		if b == nil {
 			log.Panic("The events bucket does not exist")
@@ -40,7 +41,7 @@ func GetAll() (events []*Event) {
 		// ForEach doesn't return buckets (nil instead), so only the key is useful
 		return b.ForEach(func(id, _ []byte) error {
 			eb := b.Bucket(id)
-			event := &Event{}
+			event := new(Event)
 			if err := event.fromBucket(eb); err != nil {
 				return err
 			}
@@ -48,12 +49,24 @@ func GetAll() (events []*Event) {
 			return nil
 		})
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 	return
 }
 
-// Delete a service event
-func Delete() {
-
+// Delete event with the given ID.
+// Returns error if no such event can be found
+func Delete(idInt uint64) error {
+	db := database.GetDB()
+	id := database.Uint64ToBytes(idInt)
+	return db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(database.BucketKeyEvents)
+		if b == nil {
+			log.Panic("The events bucket does notexist")
+		}
+		return b.DeleteBucket(id)
+	})
 }
 
 // Add a new service event if the token matches any services in the database
@@ -92,11 +105,15 @@ func Add(serviceToken string, event *Event) error {
 func (event *Event) toBucket(eb *bbolt.Bucket) error {
 	var err error
 	id := database.Uint64ToBytes(event.ID)
-	service := database.Uint64ToBytes(event.Service)
+	serviceID := database.Uint64ToBytes(event.Service)
+	timestamp := database.Uint64ToBytes(event.Timestamp)
 	if err = eb.Put(keyEventID, id); err != nil {
 		return err
 	}
-	if eb.Put(keyEventService, service); err != nil {
+	if eb.Put(keyEventService, serviceID); err != nil {
+		return err
+	}
+	if eb.Put(keyEventTimestamp, timestamp); err != nil {
 		return err
 	}
 	if eb.Put(keyEventStatus, []byte(event.Status)); err != nil {
@@ -119,7 +136,7 @@ func (event *Event) fromBucket(eb *bbolt.Bucket) error {
 	err := errors.New("missing field from database")
 
 	// Get data from database
-	if id := eb.Get(keyEventID); id == nil {
+	if id = eb.Get(keyEventID); id == nil {
 		return err
 	}
 	if service = eb.Get(keyEventService); service == nil {

@@ -145,3 +145,11 @@ func BytesToUint64(byteData []byte) uint64 {
 func Uint64ToBytes(uint64Data uint64) []byte {
 	return []byte(strconv.FormatUint(uint64Data, 10))
 }
+
+// PrintBucket simply prints the K-V pairs in the bucket
+func PrintBucket(eb *bbolt.Bucket) error {
+	return eb.ForEach(func(k, v []byte) error {
+		fmt.Printf("- %v: %v\n", string(k), string(v))
+		return nil
+	})
+}

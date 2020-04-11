@@ -17,20 +17,19 @@ func intID(id []byte) uint64 {
 	return idInt
 }
 
-func (s1 *Service) equals (s2 *Service) bool {
-	if s1.ID != s2.ID {
+func (s1 *Service) equals(s2 *Service) bool {
+	switch {
+	case s1.ID != s2.ID:
 		return false
-	}
-	if s1.Name != s2.Name {
+	case s1.Name != s2.Name:
 		return false
-	}
-	if s1.Description != s2.Description {
+	case s1.Description != s2.Description:
 		return false
-	}
-	if s1.ExpectationPeriod != s2.ExpectationPeriod {
+	case s1.ExpectationPeriod != s2.ExpectationPeriod:
 		return false
+	default:
+		return true
 	}
-	return true
 }
 
 var (
@@ -40,13 +39,13 @@ var (
 )
 
 var testServices = []*Service{
-	&Service{
+	{
 		Name:              "tester @ dev-computer",
 		Description:       "This describes the service in more detail",
 		ExpectationPeriod: 282342,
 	},
-	&Service{Name: "tester2", ExpectationPeriod: 300003},
-	&Service{Name: "third @ tester"},
+	{Name: "tester2", ExpectationPeriod: 300003},
+	{Name: "third @ tester"},
 }
 
 func TestAddService(t *testing.T) {
@@ -69,16 +68,15 @@ func TestAddService(t *testing.T) {
 
 	// Simulate ID generation for testServices after adding them to DB, to avoid
 	// possible interferrence (shouldn't be a problem, but doesn't hurt to be sure).
-	// bbolt should always start ID sequences on 1, so this assumes that the service ID 
+	// bbolt should always start ID sequences on 1, so this assumes that the service ID
 	// equals the testService index + 1
 	for i, service := range testServices {
 		service.ID = uint64(i) + 1
 	}
 }
 
-
 func TestDeleteService(t *testing.T) {
-	var di uint64 = 1	// Deletion index
+	var di uint64 = 1 // Deletion index
 	err := Delete(di + 1)
 	if err != nil {
 		fmt.Println(err)
@@ -86,6 +84,11 @@ func TestDeleteService(t *testing.T) {
 	}
 	if err = Delete(di + 1); err == nil {
 		t.Fatal("no error returned when trying to delete non-existing service")
+	}
+
+	// Assert that the service token is deleted too
+	if service := GetByToken(token2); service != nil {
+		t.Fatal("the service token was not deleted")
 	}
 
 	// Delete from testServices too
@@ -121,6 +124,9 @@ func TestGetAll(t *testing.T) {
 		if !service.equals(testServices[i]) {
 			t.Fatal("stored service doesn't match original")
 		}
+	}
+	if services[0].equals(testServices[1]) {
+		t.Fatal("unexpected match between two services")
 	}
 }
 
