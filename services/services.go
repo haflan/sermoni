@@ -24,13 +24,12 @@ type Service struct {
 	ExpectationPeriod uint64 `json:"period"`      // set if the service is expected to report periodically, format is UnixTime (milli?)
 }
 
-
 // GetByToken returns the service structure associated with the token string, if there
 // are any matching entries in service-tokens bucket. Returns nil if there are no matches
 func GetByToken(token string) *Service {
 	id := getIDFromToken(token)
 	if id == nil {
-		log.Printf("No service found for the token '%v'\n", token)
+		log.Printf("no service found for the token '%v'\n", token)
 		return nil
 	}
 	return get(id)
@@ -43,9 +42,8 @@ func GetByID(id uint64) *Service {
 }
 
 // GetAll returns all services in the database (TODO)
-func GetAll() []*Service {
+func GetAll() (services []*Service) {
 	db := database.GetDB()
-	var services []*Service
 	db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(database.BucketKeyServices)
 		stb := tx.Bucket(database.BucketKeyServiceTokens)
@@ -66,7 +64,7 @@ func GetAll() []*Service {
 			return nil
 		})
 	})
-	return services
+	return
 }
 
 // Delete deletes the given service if it exists
@@ -86,7 +84,7 @@ func Delete(intID uint64) error {
 		if b.Bucket(serviceID) == nil {
 			return errors.New("no service for the given id")
 		}
-		if err := b.DeleteBucket(serviceID); err != nil { 
+		if err := b.DeleteBucket(serviceID); err != nil {
 			return err
 		}
 
@@ -150,16 +148,15 @@ func Add(token string, service *Service) error {
 	})
 }
 
-
-
 //
 // Package-local helpers
 //
 
 // fromBucket populates the service struct with data from the given service bucket
+// TODO: Consider failing on missing fields and generally choosing an approach more similar to Event.fromBucket
 func (service *Service) fromBucket(id []byte, sb *bbolt.Bucket) {
 	// Ignoring this error, because it shouldn't be possible
-	idInt, _ := strconv.ParseUint(string(id), 10, 64)
+	idInt := database.BytesToUint64(id)
 	service.ID = idInt
 	if name := sb.Get(keyServiceName); name != nil {
 		service.Name = string(name)

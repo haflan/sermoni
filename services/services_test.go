@@ -99,6 +99,9 @@ func TestGetByID(t *testing.T) {
 	if !service.equals(testService) {
 		t.Fatal("stored service doesn't match original")
 	}
+	if service = GetByID(23423); service != nil {
+		t.Fatal("returned service for invalid id")
+	}
 }
 
 func TestGetByToken(t *testing.T) {
@@ -106,6 +109,9 @@ func TestGetByToken(t *testing.T) {
 	service := GetByToken(token3)
 	if !service.equals(testService) {
 		t.Fatal("stored service doesn't match original")
+	}
+	if service = GetByToken("not-a-token"); service != nil {
+		t.Fatal("returned service for invalid token")
 	}
 }
 

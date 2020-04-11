@@ -3,6 +3,8 @@ package database
 import (
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -125,4 +127,21 @@ func Close() {
 // GetDB gets the database structure
 func GetDB() *bbolt.DB {
 	return db
+}
+
+// BytesToUint64 converts a byte array to a uint64 number, an operation that is
+// often repeated for IDs. It is assumed that the data will parse successfully
+// (i.e. type checking is performed in an earlier stage).
+// If the parsing fails, the function therefore panics
+func BytesToUint64(byteData []byte) uint64 {
+	uint64Data, err := strconv.ParseUint(string(byteData), 10, 64)
+	if err != nil {
+		log.Panic("couldn't parse byte data to uint64")
+	}
+	return uint64Data
+}
+
+// Uint64ToBytes converts a uint64 formatted number to a byte array
+func Uint64ToBytes(uint64Data uint64) []byte {
+	return []byte(strconv.FormatUint(uint64Data, 10))
 }
