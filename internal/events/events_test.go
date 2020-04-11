@@ -3,8 +3,8 @@ package events
 import (
 	"fmt"
 	"os"
-	"sermoni/database"
-	"sermoni/services"
+	"sermoni/internal/database"
+	"sermoni/internal/services"
 	"testing"
 )
 

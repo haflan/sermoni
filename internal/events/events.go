@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"sermoni/database"
-	"sermoni/services"
+	"sermoni/internal/database"
+	"sermoni/internal/services"
 	"strconv"
 
 	"go.etcd.io/bbolt"

@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"sermoni/database"
+	"sermoni/internal/database"
 )
 
 func main() {

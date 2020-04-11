@@ -3,7 +3,7 @@ package services
 import (
 	"errors"
 	"log"
-	"sermoni/database"
+	"sermoni/internal/database"
 	"strconv"
 
 	"go.etcd.io/bbolt"
@@ -96,6 +96,9 @@ func Delete(intID uint64) error {
 			}
 		}
 		return errors.New("service id not found in the service-tokens bucket")
+
+		// TODO: Cascade, i.e. delete all events for the given service
+		// Maybe this should be done in the HTTP request handler, though?
 	})
 }
 

@@ -3,7 +3,7 @@ package services
 import (
 	"fmt"
 	"os"
-	"sermoni/database"
+	"sermoni/internal/database"
 	"strconv"
 	"testing"
 )
