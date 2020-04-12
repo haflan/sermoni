@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"sermoni/internal/config"
 	"sermoni/internal/database"
 	smhttp "sermoni/internal/http"
 )
@@ -17,7 +18,11 @@ func main() {
 	// TODO: Use getopt package instead of flags?
 	//password := flag.String("w", "", "Password for the web interface")
 	flag.Parse()
-	database.Init(*dbFile)
+	configured := database.Open(*dbFile)
+	if !configured {
+		log.Printf("Setting up new database '%v'\n", *dbFile)
+		config.InitConfig()
+	}
 	defer database.Close()
 	log.Printf("Server started listening on port %v\n", *port)
 	smhttp.StartServer(*port)
