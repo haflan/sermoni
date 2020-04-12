@@ -9,7 +9,7 @@
             </div>
         </header>
         <main>
-            <component :is="page" @login="login"/>
+            <component v-if="page" :is="page" @login="login"/>
         </main>
     </div>
 </template>
@@ -25,8 +25,8 @@
         components: {Login, Eye, Events, Services},
         data() {
             return {
-                page: Login,
-                serviceView: false
+                page: null,
+                serviceView: false,
             };
         },
         methods: {
@@ -48,7 +48,11 @@
             api.init(
                 successData => {
                     console.log(successData);
-                    api.login()
+                    if (successData.authenticated) {
+                        this.page = Events;
+                    } else {
+                        this.page = Login;
+                    }
                 },
                 errorData => {
                     console.log(errorData);

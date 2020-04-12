@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
 
@@ -24,7 +23,7 @@ func initHandler(w http.ResponseWriter, r *http.Request) {
 	val := session.Values["csrftoken"]
 	token, ok := val.(string)
 	if !ok {
-		token = string(securecookie.GenerateRandomKey(32))
+		token = temporary32CharRandomString()
 		session.Values["csrftoken"] = token
 		session.Save(r, w) // TODO: Error handling, as always
 	}
