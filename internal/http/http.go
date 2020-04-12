@@ -7,6 +7,7 @@ import (
 
 	"sermoni/internal/config"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
@@ -19,34 +20,26 @@ func StartServer(port int) {
 	conf = config.GetConfig()
 	store = sessions.NewCookieStore(conf.SessionKey)
 
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/login", loginHandler)
+	router := mux.NewRouter()
+	router.HandleFunc("/", homeHandler)
+	router.HandleFunc("/login", loginHandler)
+	router.HandleFunc("/logout", logoutHandler)
 
+	router.HandleFunc("/services", getServices).Methods("GET")
+	router.HandleFunc("/services", postService).Methods("POST")
+	router.HandleFunc("/services/{id:[0-9]+}", deleteService).Methods("DELETE")
+	//router.HandleFunc("/services/{id:[0-9]+}", putService).Methods("PUT") (TODO)
+
+	router.HandleFunc("/events", getEvents).Methods("GET")
+	router.HandleFunc("/events/{id:[0-9]+}", deleteEvent).Methods("DELETE")
+
+	router.HandleFunc("/report", reportEvent).Methods("POST")
+	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", port), nil))
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	w.Write(getWebsite())
-	return
-}
-
-func authorized(session *sessions.Session) bool {
-	val := session.Values["authenticated"]
-	auth, ok := val.(bool)
-	return ok && auth
-}
-
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
-	if authorized(session) {
-		log.Println("Authenticated session requested website")
-		w.Write([]byte("logged in"))
-	} else {
-		log.Println("New session requested website")
-		session.Values["authenticated"] = true
-		log.Println(session.Save(r, w))
-		w.Write([]byte("Not logged in"))
-	}
 	return
 }
