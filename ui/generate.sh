@@ -23,9 +23,12 @@ cp $INDEX_HTML $HTML_GO
 sed -i 's/`/`\+"`"\+`/g' $HTML_GO
 cat <<EOF > $HTML_GO
 // +build PRODUCTION
+
 package http
 
-var websiteHTML = []byte(\`
+func getWebsite() []byte {
+	return []byte(\`
 $(cat $HTML_GO)
-\`)
+	\`)
+}
 EOF
