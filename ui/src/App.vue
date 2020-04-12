@@ -19,6 +19,7 @@
     import Login from "./Login.vue";
     import Events from "./Events.vue";
     import Services from "./Services.vue";
+    import api from "./requests.js";
     export default {
         name: "App",
         components: {Login, Eye, Events, Services},
@@ -44,8 +45,16 @@
             }
         },
         mounted() {
-            // TODO: Send request to server to figure out if an authenticated
-            //       session is active
+            api.init(
+                successData => {
+                    console.log(successData);
+                    api.login()
+                },
+                errorData => {
+                    console.log(errorData);
+                    // TODO: set color of header to '#f5c6cb'
+                }
+            )
         }
     }
 </script>

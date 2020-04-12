@@ -1,17 +1,43 @@
 package http
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
+	"math/rand"
+	"strings"
+	"time"
 
+	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
 
-func authorized(session *sessions.Session) bool {
-	val := session.Values["authenticated"]
-	auth, ok := val.(bool)
-	return ok && auth
+// Deal with login, logout, and general security stuff
+
+// initHandler checks two things: 
+// 1. If a CSRF token exists for the given session. Otherwise it creates it
+// 2. Whether the session is authenticated
+// It then returns an object on the form {"auth": true, "csrftoken": "<long string>"}
+// This is requested immediately when the website is loaded.
+func initHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+	val := session.Values["csrftoken"]
+	token, ok := val.(string)
+	if !ok {
+		token = string(securecookie.GenerateRandomKey(32))
+		session.Values["csrftoken"] = token
+		session.Save(r, w) // TODO: Error handling, as always
+	}
+	b, _ := json.Marshal(struct {
+		CSRFToken string `json:"csrftoken"`
+		Authenticated bool `json:"authenticated"`
+	}{
+		token,
+		authorized(session),
+	})
+	w.Write(b)
 }
+
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
@@ -34,6 +60,12 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Logged out"))
 }
 
+func authorized(session *sessions.Session) bool {
+	val := session.Values["authenticated"]
+	auth, ok := val.(bool)
+	return ok && auth
+}
+
 // Middleware for the simple sermoni authentication scheme
 func auth(handler http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -46,4 +78,19 @@ func auth(handler http.HandlerFunc) http.Handler {
 		}
 		handler.ServeHTTP(w, r)
 	})
+}
+
+// not cryptosecure, only for testing!
+// thanks: https://yourbasic.org/golang/generate-random-string/
+func temporary32CharRandomString() string {
+	rand.Seed(time.Now().UnixNano())
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ" +
+	    "abcdefghijklmnopqrstuvwxyzåäö" +
+	    "0123456789")
+	length := 32
+	var b strings.Builder
+	for i := 0; i < length; i++ {
+	    b.WriteRune(chars[rand.Intn(len(chars))])
+	}
+	return b.String()
 }

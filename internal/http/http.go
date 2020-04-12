@@ -22,8 +22,8 @@ func StartServer(port int) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", homeHandler)
+	router.HandleFunc("/init", initHandler)
 	router.HandleFunc("/login", loginHandler)
-	//router.HandleFunc("/logout", logoutHandler)
 	router.Handle("/logout", auth(logoutHandler))
 
 	router.Handle("/services", auth(getServices)).Methods("GET")
