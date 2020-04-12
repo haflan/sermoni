@@ -20,20 +20,19 @@ func StartServer(port int) {
 	conf = config.GetConfig()
 	store = sessions.NewCookieStore(conf.SessionKey)
 
-	auth := AuthHandler(store)
 	router := mux.NewRouter()
 	router.HandleFunc("/", homeHandler)
 	router.HandleFunc("/login", loginHandler)
 	//router.HandleFunc("/logout", logoutHandler)
-	router.Handle("/logout", auth(http.HandlerFunc(logoutHandler)))
+	router.Handle("/logout", auth(logoutHandler))
 
-	router.Handle("/services", auth(http.HandlerFunc(getServices))).Methods("GET")
-	router.Handle("/services", auth(http.HandlerFunc(postService))).Methods("POST")
-	router.HandleFunc("/services/{id:[0-9]+}", deleteService).Methods("DELETE")
-	//router.HandleFunc("/services/{id:[0-9]+}", putService).Methods("PUT") (TODO)
+	router.Handle("/services", auth(getServices)).Methods("GET")
+	router.Handle("/services", auth(postService)).Methods("POST")
+	router.Handle("/services/{id:[0-9]+}", auth(deleteService)).Methods("DELETE")
+	//router.Handle("/services/{id:[0-9]+}", putService).Methods("PUT") (TODO)
 
-	router.HandleFunc("/events", getEvents).Methods("GET")
-	router.HandleFunc("/events/{id:[0-9]+}", deleteEvent).Methods("DELETE")
+	router.Handle("/events", auth(getEvents)).Methods("GET")
+	router.Handle("/events/{id:[0-9]+}", auth(deleteEvent)).Methods("DELETE")
 
 	router.HandleFunc("/report", reportEvent).Methods("POST")
 	http.Handle("/", router)

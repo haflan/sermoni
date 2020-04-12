@@ -34,18 +34,16 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Logged out"))
 }
 
-
-// Thanks: https://github.com/mastertinner/adapters/blob/master/basicauth/basicauth.go
-func AuthHandler(store *sessions.CookieStore) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			session, _ := store.Get(r, "session")
-			if !authorized(session) {
-				status := http.StatusUnauthorized
-				http.Error(w, http.StatusText(status), status)
-				return
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
+// Middleware for the simple sermoni authentication scheme
+func auth(handler http.HandlerFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Store is the global CookieStore
+		session, _ := store.Get(r, "session")
+		if !authorized(session) {
+			status := http.StatusUnauthorized
+			http.Error(w, http.StatusText(status), status)
+			return
+		}
+		handler.ServeHTTP(w, r)
+	})
 }
