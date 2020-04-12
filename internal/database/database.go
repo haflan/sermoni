@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/gorilla/securecookie"
 	"go.etcd.io/bbolt"
 )
 
@@ -24,8 +25,11 @@ var (
 	BucketKeyServices      = []byte("services")       // bucket key for services bucket
 	BucketKeyServiceTokens = []byte("service-tokens") // bucket key for service-tokens bucket
 
-	keyPassHash  = []byte("passhash")
-	keyPageTitle = []byte("pagetitle")
+	keyPassHash   = []byte("passhash")
+	keyPageTitle  = []byte("pagetitle")
+	keySCHashKey  = []byte("schashkey") // Secure cookie hash key
+	keySCBlockKey = []byte("blockkey")  // Secure cookie block key
+	keyCSRFKey    = []byte("csrfkey")   // CSRF protection auth key
 )
 
 // ErrConfigBucket is returned when bbolt is unable to open the config bucket
@@ -34,47 +38,46 @@ var ErrConfigBucket = errors.New("unable to open config bucket")
 
 var db *bbolt.DB
 
+// check for fatal errors
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // Init opens the database for the given file name or creates it if it doesn't exist.
 // It also populates it with essential configuration data if required.
 func Init(dbFileName string) error {
-	fmt.Printf("Init db '%v'\n", dbFileName)
+	log.Printf("Init db '%v'\n", dbFileName)
 	var err error
 	db, err = bbolt.Open(dbFileName, 0600, &bbolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return err
-	}
+	check(err)
 	// Create the necessary bbolt buckets if they don't exist
-	err = db.Update(func(tx *bbolt.Tx) error {
-		if _, err := tx.CreateBucketIfNotExists(BucketKeyConfig); err != nil {
-			return err
-		}
-		if _, err := tx.CreateBucketIfNotExists(BucketKeyServices); err != nil {
-			return err
-		}
-		if _, err := tx.CreateBucketIfNotExists(BucketKeyEvents); err != nil {
-			return err
-		}
-		if _, err := tx.CreateBucketIfNotExists(BucketKeyServiceTokens); err != nil {
-			return err
-		}
+	db.Update(func(tx *bbolt.Tx) error {
+		_, err = tx.CreateBucketIfNotExists(BucketKeyConfig)
+		check(err)
+		_, err = tx.CreateBucketIfNotExists(BucketKeyServices)
+		check(err)
+		_, err = tx.CreateBucketIfNotExists(BucketKeyEvents)
+		check(err)
+		_, err = tx.CreateBucketIfNotExists(BucketKeyServiceTokens)
+		check(err)
 		return nil
 	})
-	if err != nil {
-		return err
-	}
 	// Check if the config is initialized - configure if not
 	var configured bool
-	err = db.View(func(tx *bbolt.Tx) error {
+	db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(BucketKeyConfig)
 		if b == nil {
-			return ErrConfigBucket
+			panic(ErrConfigBucket)
 		}
 		passhash := b.Get(keyPassHash)
 		configured = passhash != nil
 		return nil
 	})
 	if !configured {
-		return Reconfigure(defaultPassPhrase, defaultPageTitle)
+		initAuthKeys()
+		Reconfigure(defaultPassPhrase, defaultPageTitle)
 	}
 	return nil
 }
@@ -82,7 +85,7 @@ func Init(dbFileName string) error {
 // Reconfigure takes a passphrase and a page title for the web page,
 // generates hash for the password and updates the database with this
 // new configuration.
-func Reconfigure(passphrase string, pageTitle string) error {
+func Reconfigure(passphrase string, pageTitle string) {
 	// TODO: Maybe this belongs elsewhere?
 	/* TODO: Generate a random _readable_ password if none is given
 	var passphraseBytes []byte
@@ -98,22 +101,36 @@ func Reconfigure(passphrase string, pageTitle string) error {
 
 	// TODO: Maybe bcrypt is overkill for such a small project? Consider later
 	passhash, err := bcrypt.GenerateFromPassword([]byte(passphrase), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	return db.Update(func(tx *bbolt.Tx) error {
+	check(err)
+	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(BucketKeyConfig)
 		if b == nil {
 			return ErrConfigBucket
 		}
 		var err error
-		if err = b.Put(keyPassHash, passhash); err != nil {
-			return err
+		err = b.Put(keyPassHash, passhash)
+		check(err)
+		err = b.Put(keyPageTitle, []byte(pageTitle))
+		check(err)
+		return nil
+	})
+}
+
+// initAuthKeys generates session and CSRF protection authentitication keys
+// and persists them to DB
+func initAuthKeys() {
+	hashKey := securecookie.GenerateRandomKey(32)
+	blockKey := securecookie.GenerateRandomKey(32)
+	db.Update(func(tx *bbolt.Tx) error {
+		var err error
+		b := tx.Bucket(BucketKeyConfig)
+		if b == nil {
+			panic("the config bucket does not exist")
 		}
-		if err = b.Put(keyPageTitle, []byte(pageTitle)); err != nil {
-			return err
-		}
+		err = b.Put(keySCHashKey, hashKey)
+		check(err)
+		err = b.Put(keySCBlockKey, blockKey)
+		check(err)
 		return nil
 	})
 }
@@ -135,9 +152,7 @@ func GetDB() *bbolt.DB {
 // If the parsing fails, the function therefore panics
 func BytesToUint64(byteData []byte) uint64 {
 	uint64Data, err := strconv.ParseUint(string(byteData), 10, 64)
-	if err != nil {
-		log.Panic("couldn't parse byte data to uint64")
-	}
+	check(err)
 	return uint64Data
 }
 

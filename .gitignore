@@ -2,3 +2,4 @@ sermoni.db
 **/test.db
 node_modules/
 html.go
+dist/

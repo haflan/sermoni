@@ -14,6 +14,6 @@ func StartServer(port int) {
 
 func staticHandler(res http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	res.Write(websiteHTML)
+	res.Write(getWebsite())
 	return
 }
