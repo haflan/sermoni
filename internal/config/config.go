@@ -15,8 +15,6 @@ var (
 
 	keyPassHash   = []byte("passhash")
 	keyPageTitle  = []byte("pagetitle")
-	keySCHashKey  = []byte("schashkey")  // Secure cookie hash key
-	keySCBlockKey = []byte("blockkey")   // Secure cookie block key
 	keySessionKey = []byte("sessionkey") // Session key
 	keyCSRFKey    = []byte("csrfkey")    // CSRF protection auth key
 )
@@ -25,8 +23,6 @@ var (
 type Config struct {
 	PassHash   []byte
 	PageTitle  []byte
-	SCHashKey  []byte
-	SCBlockKey []byte
 	SessionKey []byte
 	CSRFKey    []byte
 }
@@ -40,8 +36,6 @@ func GetConfig() (config *Config) {
 		config = &Config{
 			PassHash:   b.Get(keyPassHash),
 			PageTitle:  b.Get(keyPageTitle),
-			SCHashKey:  b.Get(keySCHashKey),
-			SCBlockKey: b.Get(keySCBlockKey),
 			SessionKey: b.Get(keySessionKey),
 			CSRFKey:    b.Get(keyCSRFKey),
 		}
@@ -70,8 +64,6 @@ func InitConfig() {
 
 	// TODO: Maybe bcrypt is overkill for such a small project? Consider later
 	passhash, err := bcrypt.GenerateFromPassword(defaultPassPhrase, bcrypt.DefaultCost)
-	hashKey := securecookie.GenerateRandomKey(32)
-	blockKey := securecookie.GenerateRandomKey(32)
 	sessionKey := securecookie.GenerateRandomKey(32)
 	CSRFKey := securecookie.GenerateRandomKey(32)
 	check(err)
@@ -81,10 +73,6 @@ func InitConfig() {
 		err = b.Put(keyPassHash, passhash)
 		check(err)
 		err = b.Put(keyPageTitle, defaultPageTitle)
-		check(err)
-		err = b.Put(keySCHashKey, hashKey)
-		check(err)
-		err = b.Put(keySCBlockKey, blockKey)
 		check(err)
 		err = b.Put(keySessionKey, sessionKey)
 		check(err)
