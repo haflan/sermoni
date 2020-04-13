@@ -7,6 +7,7 @@ export default {
     postService,
     deleteService,
     getEvents,
+    deleteEvent,
 }
 
 /***** Login and authentication *****/
@@ -48,8 +49,12 @@ function logout(passphrase, successHandler, errorHandler) {
 
 /***** Service management *****/
 
-function getServices() {
-
+function getServices(successHandler, errorHandler) {
+    request({
+        url: "/services",
+        success: successHandler,
+        error: errorHandler
+    });
 }
 
 function postService(service) {
@@ -72,8 +77,13 @@ function getEvents(successHandler, errorHandler) {
     });
 }
 
-function deleteEvent(id) {
-
+function deleteEvent(id, successHandler, errorHandler) {
+    request({
+        url: "/events/" + id,
+        method: "DELETE",
+        success: successHandler,
+        error: errorHandler
+    });
 }
 
 

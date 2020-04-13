@@ -4,7 +4,7 @@
             <div id="bar">
                 <div style="font-size: 1.5em; color: #bbf">&gt; sermoni</div> 
                 <div @click="togglePage" style="margin-left: auto;">
-                    <Eye :service-view="this.serviceView"/>
+                    <Eye :service-view="this.serviceView" style="cursor: pointer;"/>
                 </div>
             </div>
         </header>
@@ -60,7 +60,6 @@
         mounted() {
             api.init(
                 successData => {
-                    console.log(successData);
                     if (successData.authenticated) {
                         this.page = Events;
                     } else {
@@ -68,8 +67,8 @@
                     }
                 },
                 errorData => {
-                    console.log(errorData);
-                    // TODO: set color of header to '#f5c6cb'
+                    console.error(errorData);
+                    this.error = true;
                 }
             )
         }

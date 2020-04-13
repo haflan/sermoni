@@ -60,10 +60,10 @@ func GetAll() (events []*Event) {
 func Delete(idInt uint64) error {
 	db := database.GetDB()
 	id := database.Uint64ToBytes(idInt)
-	return db.View(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(database.BucketKeyEvents)
 		if b == nil {
-			log.Panic("The events bucket does notexist")
+			log.Panic("The events bucket does not exist")
 		}
 		return b.DeleteBucket(id)
 	})

@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"sermoni/internal/events"
 	"sermoni/internal/services"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 const headerServiceToken = "Service-Token"
@@ -35,12 +38,14 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 
 // TODO: This is still a placeholder!
 func deleteEvent(w http.ResponseWriter, r *http.Request) {
-	/*
-		vars := mux.Vars(r)
-		id, _ := strconv.ParseUint(vars["id"], 10, 64)
-		err := events.Delete(id)
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseUint(vars["id"], 10, 64)
+	err := events.Delete(id)
+	if err != nil {
+		// TODO: Non-existing error is not an internal server error
 		fmt.Println(err)
-	*/
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func reportEvent(w http.ResponseWriter, r *http.Request) {

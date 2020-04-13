@@ -23,7 +23,8 @@ type Service struct {
 	Name              string `json:"name"`        // service name, usually on the format 'service @ server'
 	Description       string `json:"description"` // more detailed description of the service
 	ExpectationPeriod uint64 `json:"period"`      // set if the service is expected to report periodically, format is UnixTime (milli?)
-	MaxNumberEvents   uint64 `json:"maxevents"`   // set if the service is expected to report periodically, format is UnixTime (milli?)
+	MaxNumberEvents   uint64 `json:"maxevents"`   // max number of events to keep in DB at once - when limit is reached, oldest will be deleted
+	Token             string `json:"token"`       // service token - this is stored in the service-token bucket, not the services bucket
 }
 
 // GetByToken returns the service structure associated with the token string, if there
@@ -57,11 +58,13 @@ func GetAll() (services []*Service) {
 		}
 
 		// Go through all k-v pairs in the service *tokens* bucket, in order to get service bucket IDs
-		// Use the ID to get the service bucket and create service fromBucket
-		return stb.ForEach(func(_, id []byte) error {
+		// Use the ID to get the service bucket and create service fromBucket, then set the service token
+		// using the key from the stb
+		return stb.ForEach(func(token, id []byte) error {
 			sb := b.Bucket(id)
 			service := new(Service)
 			service.fromBucket(id, sb)
+			service.Token = string(token)
 			services = append(services, service)
 			return nil
 		})

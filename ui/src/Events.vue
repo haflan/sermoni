@@ -9,6 +9,7 @@
                 <!--<mq-layout mq="md+">-->
                     <div class="event-field">{{ e.title }}</div>
                 <!--</mq-layout>-->
+                <button @click="deleteEvent(e.id)">&times;</button>
             </div>
             <div v-show="false"> more info here </div>
         </div>
@@ -38,6 +39,19 @@
                 } else {
                     return { color: "#000", backgroundColor: "#fff" };
                 }
+            },
+            deleteEvent(id) {
+                api.deleteEvent(id, 
+                    success => {
+                        this.loadedEvents = this.loadedEvents.filter(
+                            e => e.id !== id
+                        );
+                    },
+                    error => {
+                        console.error(error)
+                        this.$emit("error");
+                    }
+                ); 
             }
         },
         computed: {
@@ -51,9 +65,15 @@
             }
         },
         mounted() {
-            api.getEvents(successData => {
-                this.loadedEvents = successData;
-            });
+            api.getEvents(
+                successData => {
+                    this.loadedEvents = successData;
+                },
+                error => {
+                    console.error(error);
+                    this.$emit("error");
+                }
+            );
         }
     }
 
@@ -79,5 +99,12 @@
 .events-wrapper {
     margin: 0;
     padding: 0;
+}
+button {
+    cursor: pointer;
+    background-color: inherit;
+    border: none;
+    text-align: center;
+    font-size: 16px;
 }
 </style>
