@@ -1,12 +1,12 @@
 package config
 
 import (
+	"crypto/sha256"
 	"log"
 	"sermoni/internal/database"
 
 	"github.com/gorilla/securecookie"
 	"go.etcd.io/bbolt"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -62,15 +62,13 @@ func InitConfig() {
 	}*/
 	//sha256.Sum256([]byte(passphraseBytes))
 
-	// TODO: Maybe bcrypt is overkill for such a small project? Consider later
-	passhash, err := bcrypt.GenerateFromPassword(defaultPassPhrase, bcrypt.DefaultCost)
+	passhash := sha256.Sum256([]byte(defaultPassPhrase))
 	sessionKey := securecookie.GenerateRandomKey(32)
 	CSRFKey := securecookie.GenerateRandomKey(32)
-	check(err)
 	db.Update(func(tx *bbolt.Tx) error {
 		var err error
 		b := tx.Bucket(database.BucketKeyConfig)
-		err = b.Put(keyPassHash, passhash)
+		err = b.Put(keyPassHash, passhash[:])
 		check(err)
 		err = b.Put(keyPageTitle, defaultPageTitle)
 		check(err)

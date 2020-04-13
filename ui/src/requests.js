@@ -24,6 +24,7 @@ var csrfToken;
 // {
 //      url: "/services" ,
 //      method: "POST",
+//      data: { "newId": 8234 }
 //      expectedStatus: 201,
 //      error: errData => { console.log(errData); },
 //      success: successData => { console.log(successData); }
@@ -39,14 +40,15 @@ function request(jsonRequest) {
             jsonRequest.expectedStatus = 200
         }
         if (this.readyState === XMLHttpRequest.DONE) {
+            const data = this.responseText ? JSON.parse(this.responseText) : {};
             if (this.status !== jsonRequest.expectedStatus) {
                 if (jsonRequest.error) {
-                    jsonRequest.error(this.status, JSON.parse(this.responseText));
+                    jsonRequest.error(this.status, data);
                 } else {
                     console.error(this.status + ": " + this.responseText);
                 }
             } else if (jsonRequest.success) {
-                jsonRequest.success(JSON.parse(this.responseText));
+                jsonRequest.success(data);
             }
         }
     };
@@ -55,8 +57,9 @@ function request(jsonRequest) {
     } else {
         xhttp.open("GET", jsonRequest.url, true);
     }
-    xhttp.setRequestHeader("X-CSRFToken", csrfToken);
+    xhttp.setRequestHeader("X-Csrf-Token", csrfToken);
     if (jsonRequest.data) {
+        xhttp.setRequestHeader("Content-Type", "application/json");
         xhttp.send(JSON.stringify(jsonRequest.data));
     } else {
         xhttp.send();
@@ -72,13 +75,15 @@ function init(successHandler, errorHandler) {
                 successHandler(data);
             }
         },
-        error: errorHandler ? errorHandler : (data) => console.log(data)
+        error: errorHandler
     });
 }
 
-function login(successHandler, errorHandler) {
+function login(passphrase, successHandler, errorHandler) {
     request({
         url: "/login",
+        method: "POST",
+        data: { passphrase: passphrase },
         success: successHandler,
         error: errorHandler
     });

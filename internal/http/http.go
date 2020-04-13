@@ -22,19 +22,19 @@ func StartServer(port int) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", homeHandler)
-	router.HandleFunc("/init", initHandler)
-	router.HandleFunc("/login", loginHandler)
+	router.HandleFunc("/init", initHandler).Methods(http.MethodGet)
+	router.HandleFunc("/login", loginHandler).Methods(http.MethodPost)
 	router.Handle("/logout", auth(logoutHandler))
 
-	router.Handle("/services", auth(getServices)).Methods("GET")
-	router.Handle("/services", auth(postService)).Methods("POST")
-	router.Handle("/services/{id:[0-9]+}", auth(deleteService)).Methods("DELETE")
+	router.Handle("/services", auth(getServices)).Methods(http.MethodGet)
+	router.Handle("/services", auth(postService)).Methods(http.MethodPost)
+	router.Handle("/services/{id:[0-9]+}", auth(deleteService)).Methods(http.MethodDelete)
 	//router.Handle("/services/{id:[0-9]+}", putService).Methods("PUT") (TODO)
 
-	router.Handle("/events", auth(getEvents)).Methods("GET")
-	router.Handle("/events/{id:[0-9]+}", auth(deleteEvent)).Methods("DELETE")
+	router.Handle("/events", auth(getEvents)).Methods(http.MethodGet)
+	router.Handle("/events/{id:[0-9]+}", auth(deleteEvent)).Methods(http.MethodDelete)
 
-	router.HandleFunc("/report", reportEvent).Methods("POST")
+	router.HandleFunc("/report", reportEvent).Methods(http.MethodPost)
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", port), nil))
 }
@@ -43,4 +43,10 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	w.Write(getWebsite())
 	return
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

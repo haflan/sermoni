@@ -14,6 +14,7 @@ var (
 	keyServiceName        = []byte("name")
 	keyServiceDescription = []byte("description")
 	keyServicePeriod      = []byte("period")
+	keyServiceMaxEvents   = []byte("maxevents")
 )
 
 // Service describes a service that is expected to report
@@ -22,6 +23,7 @@ type Service struct {
 	Name              string `json:"name"`        // service name, usually on the format 'service @ server'
 	Description       string `json:"description"` // more detailed description of the service
 	ExpectationPeriod uint64 `json:"period"`      // set if the service is expected to report periodically, format is UnixTime (milli?)
+	MaxNumberEvents   uint64 `json:"maxevents"`   // set if the service is expected to report periodically, format is UnixTime (milli?)
 }
 
 // GetByToken returns the service structure associated with the token string, if there

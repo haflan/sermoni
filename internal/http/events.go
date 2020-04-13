@@ -1,10 +1,23 @@
 package http
 
 import (
+	"encoding/json"
 	"net/http"
+	"sermoni/internal/events"
 )
 
 func getEvents(w http.ResponseWriter, r *http.Request) {
+	// Create a mapping from service id to name
+	/* Eventually?
+	serviceIdName := make(map[int]string)
+	services := services.GetAll()
+	for _, service := range {
+		serviceIdName[service.ID] = service.Name
+	}
+	*/
+
+	events := events.GetAll()
+	json.Marshal(events)
 	return
 }
 

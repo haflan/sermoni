@@ -11,6 +11,7 @@
 </template>
 
 <script>
+    import api from "./requests.js";
     export default {
         name: "Login",
         data() {
@@ -20,9 +21,12 @@
         },
         methods: {
             enter() {
-                if (this.passphrase == "correct") {
-                    this.$emit("login");
-                }
+                api.login(
+                    this.passphrase,
+                    success => {
+                        this.$emit("login");
+                    }
+                );
             }
         },
         mounted() {
