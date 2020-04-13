@@ -150,6 +150,10 @@ func Add(service *Service) error {
 		if err = sb.Put(keyServicePeriod, []byte(periodStr)); err != nil {
 			return err
 		}
+		maxEventsStr := strconv.FormatUint(service.MaxNumberEvents, 10)
+		if err = sb.Put(keyServiceMaxEvents, []byte(maxEventsStr)); err != nil {
+			return err
+		}
 
 		// Put an entry in the service-tokens bucket to map the token to the service
 		return stb.Put([]byte(service.Token), serviceID)
@@ -181,6 +185,17 @@ func (service *Service) fromBucket(id []byte, sb *bbolt.Bucket) {
 		} else {
 			log.Println("Couldn't convert period to int for service")
 			service.ExpectationPeriod = 0
+		}
+	}
+	if maxevents := sb.Get(keyServiceMaxEvents); maxevents != nil {
+		// Quick fix: Convert to string, then int
+		// Uses default value 0 if an error occurs
+		intMaxEvents, err := strconv.ParseUint(string(maxevents), 10, 64)
+		if err == nil {
+			service.MaxNumberEvents = intMaxEvents
+		} else {
+			log.Println("Couldn't convert max num events to int for service")
+			service.MaxNumberEvents = 0
 		}
 	}
 }

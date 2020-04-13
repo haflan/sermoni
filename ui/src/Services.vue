@@ -5,17 +5,17 @@
             <input type="text" :value="service.token">
             <input type="text" :value="service.name">
             <input type="text" :value="service.description">
-            <input type="text" :value="service.period">
-            <input type="text" :value="service.maxevents">
+            <input type="number" :value="service.period">
+            <input type="number" :value="service.maxevents">
         </div>
 
         <input type="text" v-model="newService.token" placeholder="Token">
         <input type="text" v-model="newService.name" placeholder="Name">
         <input type="text" v-model="newService.description" 
                placeholder="Description">
-        <input type="text" v-model="newService.period"
+        <input type="number" v-model.number="newService.period"
                placeholder="Expectation Period">
-        <input type="text" v-model="newService.maxevents" 
+        <input type="number" v-model.number="newService.maxevents" 
                placeholder="Max number of events">
 
         <button @click="addService">Add service</button>
