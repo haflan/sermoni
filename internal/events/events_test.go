@@ -30,21 +30,25 @@ func (e1 *Event) equals(e2 *Event) bool {
 
 var testEvents = []*Event{
 	{
+		Service:   1,
 		Timestamp: 1586558825515,
 		Status:    "ok",
 		Title:     "Backup completed successfully",
 	},
 	{
+		Service:   1,
 		Timestamp: 1586558838488,
 		Status:    "info",
 		Title:     "SSH login for user vetle",
 		Details:   "User vetle logged in from IP 192.168.10.110",
 	},
 	{
+		Service:   1,
 		Timestamp: 1586558848488,
 		Status:    "ok",
 	},
 	{
+		Service:   1,
 		Timestamp: 1586558949488,
 		Status:    "error",
 		Title:     "Backup failed",
@@ -53,8 +57,9 @@ var testEvents = []*Event{
 }
 
 func TestAddEvent(t *testing.T) {
+	var err error
 	for _, event := range testEvents {
-		if err := Add(serviceToken, event); err != nil {
+		if err = Add(event); err != nil {
 			fmt.Println(err)
 			t.Fatal("error returned when trying to add event")
 		}

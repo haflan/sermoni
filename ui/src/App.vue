@@ -1,6 +1,6 @@
 <template>
     <div>
-        <header> 
+        <header :style="headerStyle">
             <div id="bar">
                 <div style="font-size: 1.5em; color: #bbf">&gt; sermoni</div> 
                 <div @click="togglePage" style="margin-left: auto;">
@@ -9,7 +9,10 @@
             </div>
         </header>
         <main>
-            <component v-if="page" :is="page" @login="login"/>
+            <component v-if="page"
+                       :is="page" 
+                       @login="login" 
+                       @error="error = true"/>
         </main>
     </div>
 </template>
@@ -27,11 +30,13 @@
             return {
                 page: null,
                 serviceView: false,
+                error: false
             };
         },
         methods: {
             login() {
                 this.page = Events;
+                this.error = false;
             },
             togglePage() {
                 // Should do nothing when on login page
@@ -42,6 +47,14 @@
                     this.page = Events;
                     this.serviceView = false;
                 }
+            }
+        },
+        computed: {
+            headerStyle() {
+                const bgColor = this.error ? "#fce1e1" : "#eef";
+                return {
+                    "background-color": bgColor
+                };
             }
         },
         mounted() {
@@ -71,7 +84,6 @@ body {
 }
 header {
     z-index: 1000;
-    background-color: #eef;
     border-bottom: 1px solid rgba(0,0,0,.075);
     -webkit-box-shadow: 0 0 10px rgba(0,0,0,.1);
     box-shadow: 0 0 10px rgba(0,0,0,.1);

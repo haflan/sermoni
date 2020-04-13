@@ -23,6 +23,12 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	events := events.GetAll()
+	var s *services.Service
+	for _, e := range events {
+		// Could optimize by writing a single db.View, but this is more readable, so meh..
+		s = services.GetByID(e.Service)
+		e.ServiceName = s.Name
+	}
 	b, _ := json.Marshal(events)
 	w.Write(b)
 }

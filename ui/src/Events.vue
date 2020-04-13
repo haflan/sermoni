@@ -6,10 +6,9 @@
                 :style="e.style">
                 <div class="event-field">{{ e.service }}</div>
                 <!-- TODO: Include VueMQ
-                <mq-layout mq="md+">
+                <!--<mq-layout mq="md+">-->
                     <div class="event-field">{{ e.title }}</div>
-                </mq-layout>
-                -->
+                <!--</mq-layout>-->
             </div>
             <div v-show="false"> more info here </div>
         </div>
@@ -17,38 +16,12 @@
 </template>
 
 <script>
+    import api from "./requests.js";
     export default {
         name: "Events",
         data() {
             return {
-                testdata: [{
-                    service: "backup-files @ haflan.dev",
-                    timestamp: 1586459792925,
-                    title: "Server reported success",
-                    status: "ok"
-                },{
-                    service: "backup-gitlab @ haflan.dev",
-                    timestamp: 1586459793155,
-                    title: "Server reported success",
-                    status: "ok"
-                },{
-                    service: "backup-qumps @ haflan.dev",
-                    timestamp: 1586459793285,
-                    status: "warning",
-                    title: "Memory almost full",
-                    message: "df -h reports that less than 1GB is available"
-                },{
-                    service: "backup-offsite @ work-computer",
-                    timestamp: 1586459794385,
-                    status: "error",
-                    title: "Expectation not met" // These are read from a default title thingy
-                },{
-                    service: "ssh @ haflan.dev",
-                    timestamp: 1586459794385,
-                    status: "info",
-                    title: "SSH server login",
-                    message: "User vetle logged in from IP 192.168.10.105"
-                }],
+                loadedEvents: [],
                 statusStyling: {
                     "ok": { color: "#000", backgroundColor: "#c3e6cb" },
                     "warning": { color: "#000", backgroundColor: "#ffeeba" },
@@ -63,19 +36,24 @@
                 if (style) {
                     return style;
                 } else {
-                    return { color: "#fff", backgroundColor: "#000" };
+                    return { color: "#000", backgroundColor: "#fff" };
                 }
             }
         },
         computed: {
             events() {
-                return this.testdata.map(e => {
+                return this.loadedEvents.map(e => {
                     return {
                         ...e,
                         style: this.statusStyle(e.status)
                     };
                 });
             }
+        },
+        mounted() {
+            api.getEvents(successData => {
+                this.loadedEvents = successData;
+            });
         }
     }
 

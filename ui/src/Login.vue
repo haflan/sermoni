@@ -25,6 +25,9 @@
                     this.passphrase,
                     success => {
                         this.$emit("login");
+                    },
+                    error => {
+                        this.$emit("error");
                     }
                 );
             }

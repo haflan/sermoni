@@ -6,6 +6,7 @@ export default {
     getServices,
     postService,
     deleteService,
+    getEvents,
 }
 
 /***** Login and authentication *****/
@@ -63,8 +64,12 @@ function deleteService(id) {
 
 // (TODO)
 
-function getEvents() {
-
+function getEvents(successHandler, errorHandler) {
+    request({
+        url: "/events",
+        success: successHandler,
+        error: errorHandler
+    });
 }
 
 function deleteEvent(id) {

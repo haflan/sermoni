@@ -21,12 +21,13 @@ var (
 
 // Event contains data sent to sermoni from a service
 type Event struct {
-	ID        uint64 `json:"id"`
-	Service   uint64 `json:"service"` // ID of a Service (to be mapped to service name client-side)
-	Timestamp uint64 `json:"timestamp"`
-	Status    string `json:"status"`
-	Title     string `json:"title"`
-	Details   string `json:"details"`
+	ID          uint64 `json:"id"`
+	Service     uint64 `json:"serviceid"`
+	Timestamp   uint64 `json:"timestamp"`
+	Status      string `json:"status"`
+	Title       string `json:"title"`
+	Details     string `json:"details"`
+	ServiceName string `json:"service"` // Name of service - not persisted to DB
 }
 
 // GetAll returns all events in the database
