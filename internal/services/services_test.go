@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"os"
+	"sermoni/internal/config"
 	"sermoni/internal/database"
 	"strconv"
 	"testing"
@@ -134,10 +135,8 @@ func TestMain(m *testing.M) {
 	// (Re)create the test database
 	testDB := "test.db"
 	os.Remove(testDB)
-	if err := database.Init(testDB); err != nil {
-		print("Couldn't initialize test database")
-		os.Exit(1)
-	}
+	database.Open(testDB)
+	config.InitConfig()
 	defer database.Close()
 	os.Exit(m.Run())
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"sermoni/internal/database"
-	"sermoni/internal/services"
 	"strconv"
 
 	"go.etcd.io/bbolt"
@@ -69,14 +68,9 @@ func Delete(idInt uint64) error {
 	})
 }
 
-// Add a new service event if the token matches any services in the database
-// The event.Service will be set to the service ID automatically, given a valid token
-func Add(serviceToken string, event *Event) error {
+// Add persists a new event to database after generating an ID for it
+func Add(event *Event) error {
 	db := database.GetDB()
-	service := services.GetByToken(serviceToken)
-	if service == nil {
-		return errors.New("no service found for the given token")
-	}
 	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(database.BucketKeyEvents)
 		if b == nil {
@@ -90,7 +84,6 @@ func Add(serviceToken string, event *Event) error {
 		}
 		id := []byte(strconv.FormatUint(idInt, 10))
 		event.ID = idInt
-		event.Service = service.ID
 
 		// Create the event bucket and fill it with data from event
 		eb, err := b.CreateBucket(id)

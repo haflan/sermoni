@@ -33,8 +33,10 @@ func StartServer(port int) {
 
 	router.Handle("/events", auth(getEvents)).Methods(http.MethodGet)
 	router.Handle("/events/{id:[0-9]+}", auth(deleteEvent)).Methods(http.MethodDelete)
+	// POSTS to /events is how services should report events to the monitor
+	// This should not be accessible from the website
+	router.HandleFunc("/events", reportEvent).Methods(http.MethodPost)
 
-	router.HandleFunc("/report", reportEvent).Methods(http.MethodPost)
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", port), nil))
 }

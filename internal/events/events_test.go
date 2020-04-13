@@ -3,6 +3,7 @@ package events
 import (
 	"fmt"
 	"os"
+	"sermoni/internal/config"
 	"sermoni/internal/database"
 	"sermoni/internal/services"
 	"testing"
@@ -79,12 +80,9 @@ func TestMain(m *testing.M) {
 	// (Re)create the test database
 	testDB := "test.db"
 	os.Remove(testDB)
-	var err error
-	if err = database.Init(testDB); err != nil {
-		print("Couldn't initialize test database")
-		os.Exit(1)
-	}
-	err = services.Add(serviceToken, &services.Service{
+	database.Open(testDB)
+	config.InitConfig()
+	err := services.Add(serviceToken, &services.Service{
 		Name:        "test @ dev-laptop",
 		Description: "Service used for testing only",
 	})

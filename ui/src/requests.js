@@ -1,4 +1,80 @@
 
+
+export default {
+    init,
+    login,
+    getServices,
+    postService,
+    deleteService,
+}
+
+/***** Login and authentication *****/
+
+var csrfToken;
+
+function init(successHandler, errorHandler) {
+    request({
+        url: "/init",
+        success: (data) => {
+            csrfToken = data.csrftoken;
+            if (successHandler) {
+                successHandler(data);
+            }
+        },
+        error: errorHandler
+    });
+}
+
+function login(passphrase, successHandler, errorHandler) {
+    request({
+        url: "/login",
+        method: "POST",
+        data: { passphrase: passphrase },
+        success: successHandler,
+        error: errorHandler
+    });
+}
+
+function logout(passphrase, successHandler, errorHandler) {
+    request({
+        url: "/logout",
+        method: "POST",
+        success: successHandler,
+        error: errorHandler
+    });
+}
+
+
+/***** Service management *****/
+
+function getServices() {
+
+}
+
+function postService(service) {
+
+}
+
+function deleteService(id) {
+
+}
+
+/***** Event management *****/
+
+// (TODO)
+
+function getEvents() {
+
+}
+
+function deleteEvent(id) {
+
+}
+
+
+
+/***** Request utils *****/
+
 /**
  * Create URL parameters from a JSON object
  */
@@ -16,8 +92,6 @@ function params(parameterObject) {
     }
     return parameters.toString();
 }
-
-var csrfToken;
 
 // Send a request to server. Takes request description, jsonRequest,
 // on the following format
@@ -66,30 +140,3 @@ function request(jsonRequest) {
     }
 }
 
-function init(successHandler, errorHandler) {
-    request({
-        url: "/init",
-        success: (data) => {
-            csrfToken = data.csrftoken;
-            if (successHandler) {
-                successHandler(data);
-            }
-        },
-        error: errorHandler
-    });
-}
-
-function login(passphrase, successHandler, errorHandler) {
-    request({
-        url: "/login",
-        method: "POST",
-        data: { passphrase: passphrase },
-        success: successHandler,
-        error: errorHandler
-    });
-}
-
-export default {
-    init,
-    login,
-}
