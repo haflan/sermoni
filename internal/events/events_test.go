@@ -87,7 +87,8 @@ func TestMain(m *testing.M) {
 	os.Remove(testDB)
 	database.Open(testDB)
 	config.InitConfig()
-	err := services.Add(serviceToken, &services.Service{
+	err := services.Add(&services.Service{
+		Token:       serviceToken,
 		Name:        "test @ dev-laptop",
 		Description: "Service used for testing only",
 	})

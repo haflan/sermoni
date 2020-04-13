@@ -109,7 +109,7 @@ func Delete(intID uint64) error {
 
 // Add adds a new service to monitor
 // Returns error if the token is unavailable and if the transaction fails in any way
-func Add(token string, service *Service) error {
+func Add(service *Service) error {
 	db := database.GetDB()
 	return db.Update(func(tx *bbolt.Tx) error {
 		var err error
@@ -127,7 +127,7 @@ func Add(token string, service *Service) error {
 		}
 
 		// Check if the service token is available, return error otherwise
-		serviceToken := []byte(token)
+		serviceToken := []byte(service.Token)
 		if serviceID = stb.Get(serviceToken); serviceID != nil {
 			return errors.New("a service has already been registered for the given token")
 		}
@@ -152,7 +152,7 @@ func Add(token string, service *Service) error {
 		}
 
 		// Put an entry in the service-tokens bucket to map the token to the service
-		return stb.Put([]byte(token), serviceID)
+		return stb.Put([]byte(service.Token), serviceID)
 	})
 }
 

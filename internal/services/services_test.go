@@ -41,28 +41,29 @@ var (
 
 var testServices = []*Service{
 	{
+		Token:             token1,
 		Name:              "tester @ dev-computer",
 		Description:       "This describes the service in more detail",
 		ExpectationPeriod: 282342,
 	},
-	{Name: "tester2", ExpectationPeriod: 300003},
-	{Name: "third @ tester"},
+	{Token: token2, Name: "tester2", ExpectationPeriod: 300003},
+	{Token: token3, Name: "third @ tester"},
 }
 
 func TestAddService(t *testing.T) {
-	err := Add(token1, testServices[0])
+	err := Add(testServices[0])
 	if err != nil {
 		fmt.Println(err)
 		t.Fatal("unexpected error when adding service")
 	}
-	if err = Add(token2, testServices[1]); err != nil {
+	if err = Add(testServices[1]); err != nil {
 		fmt.Println(err)
 		t.Fatal("unexpected error when adding second service")
 	}
-	if err = Add(token2, testServices[1]); err == nil {
+	if err = Add(testServices[1]); err == nil {
 		t.Fatal("no error returned when trying to re-use a service token")
 	}
-	err = Add(token3, testServices[2])
+	err = Add(testServices[2])
 	if err != nil {
 		t.Fatal("unexpected error when adding third service")
 	}

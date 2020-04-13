@@ -57,8 +57,15 @@ function getServices(successHandler, errorHandler) {
     });
 }
 
-function postService(service) {
-
+// TODO: Expected status 201 (and set 201 server-side)
+function postService(service, successHandler, errorHandler) {
+    request({
+        url: "/services",
+        method: "POST",
+        data: service,
+        success: successHandler,
+        error: errorHandler
+    });
 }
 
 function deleteService(id) {
@@ -89,24 +96,6 @@ function deleteEvent(id, successHandler, errorHandler) {
 
 
 /***** Request utils *****/
-
-/**
- * Create URL parameters from a JSON object
- */
-function params(parameterObject) {
-    const parameters = new URLSearchParams();
-    for (let key in parameterObject) {
-        let value = parameterObject[key];
-        if (Array.isArray(value)) {
-            for (let i = 0; i < value.length; i++) {
-                parameters.append(key, value[i]);
-            }
-        } else {
-            parameters.set(key, value);
-        }
-    }
-    return parameters.toString();
-}
 
 // Send a request to server. Takes request description, jsonRequest,
 // on the following format
