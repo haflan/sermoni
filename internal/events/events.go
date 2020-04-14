@@ -31,7 +31,8 @@ type Event struct {
 }
 
 // GetAll returns all events in the database
-func GetAll() (events []*Event) {
+func GetAll() ([]*Event) {
+	events := []*Event{}
 	db := database.GetDB()
 	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(database.BucketKeyEvents)
@@ -52,7 +53,7 @@ func GetAll() (events []*Event) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	return
+	return events
 }
 
 // Delete event with the given ID.

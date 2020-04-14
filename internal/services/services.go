@@ -45,7 +45,8 @@ func GetByID(id uint64) *Service {
 }
 
 // GetAll returns all services in the database (TODO)
-func GetAll() (services []*Service) {
+func GetAll() ([]*Service) {
+	services  := []*Service{}
 	db := database.GetDB()
 	db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(database.BucketKeyServices)
@@ -69,7 +70,7 @@ func GetAll() (services []*Service) {
 			return nil
 		})
 	})
-	return
+	return services
 }
 
 // Delete deletes the given service if it exists
