@@ -45,23 +45,36 @@ func GetConfig() (config *Config) {
 
 }
 
+// SetPassphrase persists the sha256sum of the given passphrase to DB
+func SetPassphrase(passphrase string) {
+	db := database.GetDB()
+	passhash := sha256.Sum256([]byte(passphrase))
+	db.Update(func(tx *bbolt.Tx) error {
+		var err error
+		b := tx.Bucket(database.BucketKeyConfig)
+		err = b.Put(keyPassHash, passhash[:])
+		check(err)
+		return nil
+	})
+}
+
+// SetPageTitle persists the given page title to DB
+func SetPageTitle(pageTitle string) {
+	db := database.GetDB()
+	db.Update(func(tx *bbolt.Tx) error {
+		var err error
+		b := tx.Bucket(database.BucketKeyConfig)
+		err = b.Put(keyPageTitle, []byte(pageTitle))
+		check(err)
+		return nil
+	})
+}
+
 // InitConfig populates the config root bucket with default configurations
 // (Web client) passphrase and page title can be reset later
 func InitConfig() {
 	db := database.GetDB()
-	// TODO: Maybe this belongs elsewhere?
-	/* TODO: Generate a random _readable_ password if none is given
-	var passphraseBytes []byte
-	if passphrase == "" {
-		passphraseBytes = make([]byte, 24)
-		rand.Read(passphraseBytes)
-		passphrase = string(passphraseBytes)
-		fmt.Printf("Generated passphrase: %v\n", []rune(passphrase))
-	} else {
-		passphraseBytes = []byte(passphrase)
-	}*/
-	//sha256.Sum256([]byte(passphraseBytes))
-
+	// TODO: Generate a random _readable_ password if none is given
 	passhash := sha256.Sum256([]byte(defaultPassPhrase))
 	sessionKey := securecookie.GenerateRandomKey(32)
 	CSRFKey := securecookie.GenerateRandomKey(32)
