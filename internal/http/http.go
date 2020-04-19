@@ -19,6 +19,9 @@ var store *sessions.CookieStore
 func StartServer(port int) {
 	conf = config.GetConfig()
 	store = sessions.NewCookieStore(conf.SessionKey)
+	store.Options.MaxAge = 604800;
+	store.Options.HttpOnly = true;
+	store.Options.Secure = PRODUCTION; // Found in html.go / html_dev.go
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", homeHandler)

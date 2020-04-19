@@ -1,15 +1,12 @@
 package http
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
-	"strings"
-	"time"
-
-	"github.com/gorilla/sessions"
 )
 
 // Deal with login, logout, and general security stuff
@@ -28,11 +25,11 @@ const (
 // It then returns an object on the form {"auth": true, "csrftoken": "<long string>"}
 // This is requested immediately when the website is loaded.
 func initHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
+	session, _ := store.Get(r, keySessionName)
 	val := session.Values[keyCSRFToken]
 	token, ok := val.(string)
 	if !ok {
-		token = temporary32CharRandomString()
+		token = generateCSRFToken()
 		session.Values[keyCSRFToken] = token
 		session.Save(r, w) // TODO: Error handling, as always
 	}
@@ -41,14 +38,13 @@ func initHandler(w http.ResponseWriter, r *http.Request) {
 		Authenticated bool   `json:"authenticated"`
 	}{
 		token,
-		authorized(session),
+		authorized(r),
 	})
 	w.Write(b)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, keySessionName)
-	if authorized(session) {
+	if authorized(r) {
 		return
 	}
 	defer r.Body.Close() // needed?
@@ -59,6 +55,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	passphrase := data[keyPassphrase]
 	passhash := sha256.Sum256([]byte(passphrase))
 	if string(passhash[:]) == string(conf.PassHash) {
+		session, _ := store.Get(r, keySessionName)
 		session.Values[keyAuthenticated] = true
 		err = session.Save(r, w)
 		check(err)
@@ -76,7 +73,8 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Logged out"))
 }
 
-func authorized(session *sessions.Session) bool {
+func authorized(r *http.Request) bool {
+	session, _ := store.Get(r, keySessionName)
 	val := session.Values[keyAuthenticated]
 	auth, ok := val.(bool)
 	return ok && auth
@@ -86,8 +84,7 @@ func authorized(session *sessions.Session) bool {
 func auth(handler http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// store is the global CookieStore
-		session, _ := store.Get(r, keySessionName)
-		if !authorized(session) {
+		if !authorized(r) || !csrfCheckPassed(r) {
 			status := http.StatusUnauthorized
 			http.Error(w, http.StatusText(status), status)
 			return
@@ -96,7 +93,8 @@ func auth(handler http.HandlerFunc) http.Handler {
 	})
 }
 
-func csrfCheckPassed(r *http.Request, session *sessions.Session) bool {
+func csrfCheckPassed(r *http.Request) bool {
+	session, _ := store.Get(r, keySessionName)
 	// CSRF protect anything but GET requests
 	if r.Method == http.MethodGet {
 		return true
@@ -113,17 +111,8 @@ func csrfCheckPassed(r *http.Request, session *sessions.Session) bool {
 	}
 }
 
-// not cryptosecure, only for testing!
-// thanks: https://yourbasic.org/golang/generate-random-string/
-func temporary32CharRandomString() string {
-	rand.Seed(time.Now().UnixNano())
-	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-		"abcdefghijklmnopqrstuvwxyz" +
-		"0123456789")
-	length := 32
-	var b strings.Builder
-	for i := 0; i < length; i++ {
-		b.WriteRune(chars[rand.Intn(len(chars))])
-	}
-	return b.String()
+func generateCSRFToken() string {
+	randBytes := make([]byte, 32)
+	rand.Read(randBytes)
+	return hex.EncodeToString(randBytes)
 }

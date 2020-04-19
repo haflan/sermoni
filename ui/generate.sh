@@ -26,6 +26,8 @@ cat <<EOF > $HTML_GO
 
 package http
 
+const PRODUCTION = true;
+
 func getWebsite() []byte {
 	return []byte(\`
 $(cat $HTML_GO)
