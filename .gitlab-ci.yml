@@ -1,0 +1,6 @@
+build_image:
+  script:
+    - docker build -t d.haflan.dev/general/sermoni:latest .
+    - docker push d.haflan.dev/general/sermoni
+  only:
+    - master
