@@ -17,9 +17,10 @@ RUN go get -d ./... ; \
         -o /go/bin/sermoni \
         -tags PRODUCUTION \
         ./cmd/sermoni/
-
+# Empty directory for database
+RUN mkdir -p /data
 ### Production image
 FROM scratch
+COPY --from=builder /data /data
 COPY --from=builder /go/bin/sermoni /sermoni
-RUN mkdir -p /data
 ENTRYPOINT ["/sermoni", "-d", "/data/sermoni.db"]
