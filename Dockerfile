@@ -18,7 +18,7 @@ RUN go get -d ./... ; \
     go build \
         -ldflags="-w -s" \
         -o /go/bin/sermoni \
-        -tags PRODUCUTION \
+        -tags PRODUCTION \
         ./cmd/sermoni/
 # Empty directory for database
 RUN mkdir -p /data
