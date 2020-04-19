@@ -11,8 +11,11 @@ RUN npm install; \
     mv $GOPATH/src/sermoni/ui/dist/html.go $GOPATH/src/sermoni/internal/http/
 # Build the sermoni binary
 WORKDIR $GOPATH/src/sermoni/
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
 RUN go get -d ./... ; \
-    GOOS=linux GOOARCH=amd64 go build \
+    go build \
         -ldflags="-w -s" \
         -o /go/bin/sermoni \
         -tags PRODUCUTION \
