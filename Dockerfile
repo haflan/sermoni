@@ -8,6 +8,7 @@ COPY . $GOPATH/src/sermoni/
 WORKDIR $GOPATH/src/sermoni/ui/
 RUN npm install; \
     npm run build; \
+    $GOPATH/src/sermoni/ui/generate.sh ; \
     mv $GOPATH/src/sermoni/ui/dist/html.go $GOPATH/src/sermoni/internal/http/
 # Build the sermoni binary
 WORKDIR $GOPATH/src/sermoni/
