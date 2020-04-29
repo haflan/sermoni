@@ -31,7 +31,7 @@ type Event struct {
 }
 
 // GetAll returns all events in the database
-func GetAll() ([]*Event) {
+func GetAll() []*Event {
 	events := []*Event{}
 	db := database.GetDB()
 	err := db.View(func(tx *bbolt.Tx) error {

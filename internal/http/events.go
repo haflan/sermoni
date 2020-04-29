@@ -74,6 +74,25 @@ func reportEvent(w http.ResponseWriter, r *http.Request) {
 	err = events.Add(event)
 	check(err)
 	log.Printf("New event registered, id = %v\n", event.ID)
+
+	if service.MaxNumberEvents < 1 {
+		return
+	}
+	// Find whether MaxNumberEvents is reached and delete the first event if so
+	var numEvents, firstEventID uint64
+	es := events.GetAll()
+	for _, e := range es {
+		if e.Service == service.ID {
+			if firstEventID == 0 {
+				firstEventID = e.ID
+			}
+			numEvents++
+		}
+	}
+	if numEvents > service.MaxNumberEvents {
+		events.Delete(firstEventID)
+		log.Printf("MaxNumberEvents reached for service %v. Deleting first event", service.ID)
+	}
 }
 
 // For later reference:
