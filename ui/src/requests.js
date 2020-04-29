@@ -3,6 +3,7 @@
 export default {
     init,
     login,
+    logout,
     getServices,
     postService,
     deleteService,
@@ -37,7 +38,7 @@ function login(passphrase, successHandler, errorHandler) {
     });
 }
 
-function logout(passphrase, successHandler, errorHandler) {
+function logout(successHandler, errorHandler) {
     request({
         url: "/logout",
         method: "POST",

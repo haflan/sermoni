@@ -2,8 +2,10 @@
     <div>
         <header :style="headerStyle">
             <div id="bar">
-                <div style="font-size: 1.5em; color: #bbf">&gt; sermoni</div> 
-                <div @click="togglePage" style="margin-left: auto;">
+                <div @click="logout" style="font-size:1.5em;color:#bbf;cursor:pointer">
+                    {{ pageTitle }}
+                </div> 
+                <div v-show="loggedIn" @click="togglePage" style="margin-left: auto;">
                     <Eye :service-view="this.serviceView" style="cursor: pointer;"/>
                 </div>
             </div>
@@ -28,15 +30,29 @@
         components: {Login, Eye, Events, Services},
         data() {
             return {
+                pageTitle: "",
                 page: null,
                 serviceView: false,
-                error: false
+                error: false,
+                loggedIn: false
             };
         },
         methods: {
             login() {
                 this.page = Events;
                 this.error = false;
+                this.loggedIn = true;
+            },
+            logout() {
+                if (!this.loggedIn) {
+                    return;
+                }
+                api.logout(
+                    success => {
+                        this.loggedIn = false;
+                        this.page = Login;
+                    }
+                );
             },
             togglePage() {
                 // Should do nothing when on login page
@@ -60,7 +76,9 @@
         mounted() {
             api.init(
                 successData => {
-                    if (successData.authenticated) {
+                    this.pageTitle = successData.pagetitle;
+                    this.loggedIn = successData.authenticated;
+                    if (this.loggedIn) {
                         this.page = Events;
                     } else {
                         this.page = Login;

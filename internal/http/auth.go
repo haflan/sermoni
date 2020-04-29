@@ -22,7 +22,7 @@ const (
 // initHandler checks two things:
 // 1. If a CSRF token exists for the given session. Otherwise it creates it
 // 2. Whether the session is authenticated
-// It then returns an object on the form {"auth": true, "csrftoken": "<long string>"}
+// It then returns an object on the form {"auth": true, "csrftoken": "<long string>", "pagetitle": "Page title"}
 // This is requested immediately when the website is loaded.
 func initHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, keySessionName)
@@ -34,9 +34,11 @@ func initHandler(w http.ResponseWriter, r *http.Request) {
 		session.Save(r, w) // TODO: Error handling, as always
 	}
 	b, _ := json.Marshal(struct {
+		PageTitle     string `json:"pagetitle"`
 		CSRFToken     string `json:"csrftoken"`
 		Authenticated bool   `json:"authenticated"`
 	}{
+		string(conf.PageTitle),
 		token,
 		authorized(r),
 	})
@@ -70,7 +72,10 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values[keyAuthenticated] = false
 	err := session.Save(r, w)
 	check(err)
-	w.Write([]byte("Logged out"))
+	b, _ := json.Marshal(struct {
+		Info string `json:"info"`
+	}{"Logged out"})
+	w.Write(b)
 }
 
 func authorized(r *http.Request) bool {
@@ -104,11 +109,11 @@ func csrfCheckPassed(r *http.Request) bool {
 	if !ok {
 		panic("no CSRF token found")
 	}
-	if tokenHeader := r.Header[headerCSRFToken]; tokenHeader == nil {
+	tokenHeader := r.Header[headerCSRFToken]
+	if tokenHeader == nil {
 		return false
-	} else {
-		return tokenHeader[0] == rightToken
 	}
+	return tokenHeader[0] == rightToken
 }
 
 func generateCSRFToken() string {
