@@ -9,6 +9,7 @@ import (
 	"sermoni/internal/events"
 	"sermoni/internal/services"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -69,6 +70,7 @@ func reportEvent(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(content, event)
 	check(err)
 	event.Service = service.ID
+	event.Timestamp = uint64(time.Now().UnixNano() / 1e6)
 	err = events.Add(event)
 	check(err)
 	log.Printf("New event registered, id = %v\n", event.ID)
