@@ -19,9 +19,9 @@ var store *sessions.CookieStore
 func StartServer(port int) {
 	conf = config.GetConfig()
 	store = sessions.NewCookieStore(conf.SessionKey)
-	store.Options.MaxAge = 604800;
-	store.Options.HttpOnly = true;
-	store.Options.Secure = PRODUCTION; // Found in html.go / html_dev.go
+	store.Options.MaxAge = 604800
+	store.Options.HttpOnly = true
+	store.Options.Secure = PRODUCTION // Found in html.go / html_dev.go
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", homeHandler)
@@ -32,7 +32,7 @@ func StartServer(port int) {
 	router.Handle("/services", auth(getServices)).Methods(http.MethodGet)
 	router.Handle("/services", auth(postService)).Methods(http.MethodPost)
 	router.Handle("/services/{id:[0-9]+}", auth(deleteService)).Methods(http.MethodDelete)
-	//router.Handle("/services/{id:[0-9]+}", putService).Methods("PUT") (TODO)
+	//router.Handle("/services/{id:[0-9]+}", auth(putService)).Methods("PUT") (TODO)
 
 	router.Handle("/events", auth(getEvents)).Methods(http.MethodGet)
 	router.Handle("/events/{id:[0-9]+}", auth(deleteEvent)).Methods(http.MethodDelete)
