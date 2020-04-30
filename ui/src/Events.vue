@@ -7,7 +7,7 @@
                 <div class="event-field">{{ e.service }}</div>
                 <!-- TODO: Include VueMQ
                 <!--<mq-layout mq="md+">-->
-                    <div class="event-field">{{ e.title }}</div>
+                    <div class="event-field">{{ simplifyDate(e.timestamp) }}</div>
                 <!--</mq-layout>-->
                 <button v-show="e.id" @click="deleteEvent(e.id)">&times;</button>
             </div>
@@ -29,7 +29,8 @@
                     "error": { color: "black", backgroundColor: "#f5c6cb" },
                     "info": { color: "black", backgroundColor: "#fff" },
                     "late":{ color: "black", backgroundColor: "#d6d8d9" },
-                }
+                },
+                eventSorter: (e1, e2) => e2.timestamp - e1.timestamp
             };
         },
         methods: {
@@ -53,6 +54,28 @@
                         this.$emit("error");
                     }
                 ); 
+            },
+            simplifyDate(eventUTC) {
+                let diffUTC = Date.now() - eventUTC;
+                let inFuture = false;
+                if (diffUTC < 0) {
+                    inFuture = true;
+                    diffUTC = -diffUTC;
+                }
+                let unitStrings = ["year", "week", "day", "hour", "minute"];
+                let units = [31536000000, 604800000, 86400000, 3600000, 60000];
+                let numOfUnits = 0;
+                for (let i = 0; i < units.length; i++) {
+                    numOfUnits = Math.floor(diffUTC / units[i]);
+                    if (numOfUnits === 0) {
+                        continue;
+                    }
+                    if (inFuture) {
+                        return "in " + numOfUnits + " " + unitStrings[i] + (numOfUnits > 1 ? "s" : "");
+                    }
+                    return numOfUnits + " " + unitStrings[i] + (numOfUnits > 1 ? "s" : "") + " ago";
+                }
+                return inFuture ? "now" : "just now";
             }
         },
         computed: {
@@ -68,7 +91,7 @@
         mounted() {
             api.getEvents(
                 successData => {
-                    this.loadedEvents = successData.reverse();
+                    this.loadedEvents = successData.sort(this.eventSorter);
                 },
                 error => {
                     console.error(error);
