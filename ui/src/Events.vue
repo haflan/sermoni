@@ -9,7 +9,7 @@
                 <!--<mq-layout mq="md+">-->
                     <div class="event-field">{{ e.title }}</div>
                 <!--</mq-layout>-->
-                <button @click="deleteEvent(e.id)">&times;</button>
+                <button v-show="e.id" @click="deleteEvent(e.id)">&times;</button>
             </div>
             <div v-show="false"> more info here </div>
         </div>
@@ -24,10 +24,11 @@
             return {
                 loadedEvents: [],
                 statusStyling: {
-                    "ok": { color: "#000", backgroundColor: "#c3e6cb" },
-                    "warning": { color: "#000", backgroundColor: "#ffeeba" },
-                    "error": { color: "#000", backgroundColor: "#f5c6cb" },
-                    "info": { color: "#000", backgroundColor: "#fff" }
+                    "ok": { color: "black", backgroundColor: "#c3e6cb" },
+                    "warning": { color: "black", backgroundColor: "#ffeeba" },
+                    "error": { color: "black", backgroundColor: "#f5c6cb" },
+                    "info": { color: "black", backgroundColor: "#fff" },
+                    "late":{ color: "black", backgroundColor: "#d6d8d9" },
                 }
             };
         },
@@ -67,7 +68,7 @@
         mounted() {
             api.getEvents(
                 successData => {
-                    this.loadedEvents = successData;
+                    this.loadedEvents = successData.reverse();
                 },
                 error => {
                     console.error(error);
