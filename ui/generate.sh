@@ -19,8 +19,9 @@ $(cat ./dist/sermoni.js)
 EOF
 
 # html.go for production, ` must be replaced by `+"`"+`
-cp $INDEX_HTML $HTML_GO
-sed -i 's/`/`\+"`"\+`/g' $HTML_GO
+INDEX_HTML_SANITIZED=${INDEX_HTML}_sane
+cp $INDEX_HTML $INDEX_HTML_SANITIZED
+sed -i 's/`/`\+"`"\+`/g' $INDEX_HTML_SANITIZED
 cat <<EOF > $HTML_GO
 // +build PRODUCTION
 
@@ -30,7 +31,8 @@ const PRODUCTION = true;
 
 func getWebsite() []byte {
 	return []byte(\`
-$(cat $HTML_GO)
+$(cat $INDEX_HTML_SANITIZED)
 	\`)
 }
 EOF
+rm $INDEX_HTML_SANITIZED
