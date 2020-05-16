@@ -58,6 +58,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(content, &data)
 	passphrase := data[keyPassphrase]
 	passhash := sha256.Sum256([]byte(passphrase))
+	// Converting byte slices to string is fine, it's how bytes.Equal does it
 	if string(passhash[:]) == string(conf.PassHash) {
 		session, _ := store.Get(r, keySessionName)
 		session.Values[keyAuthenticated] = true
