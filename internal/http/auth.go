@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -17,6 +18,7 @@ const (
 	keyPassphrase    = "passphrase"
 	keySessionName   = "session"
 	headerCSRFToken  = "X-Csrf-Token"
+	headerPassHash   = "Pass-Hash"
 )
 
 // initHandler checks two things:
@@ -86,13 +88,25 @@ func authorized(r *http.Request) bool {
 }
 
 // Middleware for the simple sermoni authentication scheme
+// Accepts authentication both with session cookie (typically web browser) and
+// a header on the format `Pass-Hash: <sha256sum of pass phrase>`
 func auth(handler http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// store is the global CookieStore
-		if !authorized(r) || !csrfCheckPassed(r) {
-			status := http.StatusUnauthorized
-			http.Error(w, http.StatusText(status), status)
-			return
+		passHashHeader := r.Header[headerPassHash]
+		if passHashHeader != nil {
+			// compare to hex formatted version of correct hash
+			if passHashHeader[0] != fmt.Sprintf("%x", conf.PassHash) {
+				status := http.StatusUnauthorized
+				http.Error(w, "Invalid passphrase hash", status)
+				return
+			}
+		} else {
+			// store is the global CookieStore
+			if !authorized(r) || !csrfCheckPassed(r) {
+				status := http.StatusUnauthorized
+				http.Error(w, http.StatusText(status), status)
+				return
+			}
 		}
 		handler.ServeHTTP(w, r)
 	})
