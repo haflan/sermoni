@@ -94,7 +94,7 @@ updates. The web. In summary, run these from the repo root:
 - Build static binary: 
 
   ```
-  GOOS=linux GOARCH=amd64 go get -d ./... ; \
+  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go get -d ./... ; \
   go build \
       -ldflags="-w -s" \
       -o ./sermoni \
