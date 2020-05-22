@@ -114,7 +114,6 @@
     padding: .75rem;
     border: 1px solid rgba(0,0,0,.125);
     box-sizing: border-box;
-    overflow-x: scroll;
     white-space: nowrap;
 }
 .event-field {

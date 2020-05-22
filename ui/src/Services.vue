@@ -2,14 +2,14 @@
     <div class="services-wrapper">
         <div v-for="service in services">
             {{ service.id }} : 
-            <input type="text" :value="service.token">
+            <input :type="showPasswords ? 'text' : 'password'" :value="service.token">
             <input type="text" :value="service.name">
             <input type="text" :value="service.description">
             <input type="number" :value="service.period">
             <input type="number" :value="service.maxevents">
         </div>
 
-        <input type="text" v-model="newService.token" placeholder="Token">
+        <input :type="showPasswords ? 'text' : 'password'" v-model="newService.token" placeholder="Token">
         <input type="text" v-model="newService.name" placeholder="Name">
         <input type="text" v-model="newService.description" 
                placeholder="Description">
@@ -35,7 +35,8 @@
                     description: "",
                     period: 0,
                     maxevents: 0
-                }
+                },
+                showPasswords: true
             }
         },
         methods: {
