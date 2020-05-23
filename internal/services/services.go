@@ -45,8 +45,8 @@ func GetByID(id uint64) *Service {
 }
 
 // GetAll returns all services in the database (TODO)
-func GetAll() ([]*Service) {
-	services  := []*Service{}
+func GetAll() []*Service {
+	services := []*Service{}
 	db := database.GetDB()
 	db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(database.BucketKeyServices)
@@ -58,9 +58,9 @@ func GetAll() ([]*Service) {
 			log.Panic("The service-tokens bucket does not exist")
 		}
 
-		// Go through all k-v pairs in the service *tokens* bucket, in order to get service bucket IDs
+		// Go through all k-v pairs in the service *tokens* bucket, in order to get service bucket IDs.
 		// Use the ID to get the service bucket and create service fromBucket, then set the service token
-		// using the key from the stb
+		// using the key from the stb. The returned list of services will be sorted by *token*.
 		return stb.ForEach(func(token, id []byte) error {
 			sb := b.Bucket(id)
 			service := new(Service)
