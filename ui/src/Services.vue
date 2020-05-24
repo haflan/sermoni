@@ -17,6 +17,9 @@
 
             <span>Expectation period</span>
             <time-picker :value="service.period"/> <br/>
+
+            <button @click="deletionID = service.id">Delete</button>
+            <button @click="updateService(service.id)">Update</button>
         </div>
 
         <input :type="showPasswords ? 'text' : 'password'" v-model="newService.token" placeholder="Token"> <br/>
@@ -26,6 +29,10 @@
         <time-picker v-model="newService.period" placeholder="Expectation Period"/> <br/>
 
         <button @click="addService">Add service</button>
+        <div v-show="deletionID" style="position: fixed; bottom: 15px; right: 15px;">
+            <button @click="deletionID = 0">Cancel</button>
+            <button @click="deleteService()">Confirm</button>
+        </div>
     </div>
 </template>
 
@@ -45,7 +52,8 @@
                     period: {"number": 0, "scalar": 0},
                     maxevents: 0
                 },
-                showPasswords: true
+                showPasswords: true,
+                deletionID: 0,
             }
         },
         methods: {
@@ -65,6 +73,23 @@
                         };
                     },
                     error => {
+                        this.$emit("error");
+                    }
+                );
+            },
+            updateService(id) {
+                alert("Not implemented!");
+            },
+            deleteService() {
+                api.deleteService(this.deletionID,
+                    success => {
+                        this.services = this.services.filter(
+                            s => s.id !== this.deletionID
+                        );
+                        this.deletionID = 0;
+                    },
+                    error => {
+                        console.error(error);
                         this.$emit("error");
                     }
                 );

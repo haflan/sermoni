@@ -2,8 +2,10 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"sermoni/internal/database"
+	"sermoni/internal/events"
 	"strconv"
 
 	"go.etcd.io/bbolt"
@@ -73,25 +75,53 @@ func GetAll() []*Service {
 	return services
 }
 
-// Delete deletes the given service if it exists
+// Delete deletes the given service if it exists, and all events for said service, if any
 func Delete(intID uint64) error {
 	db := database.GetDB()
 	serviceID := []byte(strconv.FormatUint(intID, 10))
-	return db.Update(func(tx *bbolt.Tx) error {
-		var b, stb *bbolt.Bucket
-		if b = tx.Bucket(database.BucketKeyServices); b == nil {
+	return db.Update(func(tx *bbolt.Tx) (err error) {
+		sb := tx.Bucket(database.BucketKeyServices)
+		stb := tx.Bucket(database.BucketKeyServiceTokens)
+		eb := tx.Bucket(database.BucketKeyEvents)
+		if sb == nil {
 			log.Panic("The services bucket does not exist")
 		}
-		if stb = tx.Bucket(database.BucketKeyServiceTokens); b == nil {
+		if stb == nil {
 			log.Panic("The service-tokens bucket does not exist")
+		}
+		if eb == nil {
+			log.Panic("The event bucket does not exist")
 		}
 
 		// Delete the entry from root services bucket
-		if b.Bucket(serviceID) == nil {
+		if sb.Bucket(serviceID) == nil {
 			return errors.New("no service for the given id")
 		}
-		if err := b.DeleteBucket(serviceID); err != nil {
+		if err = sb.DeleteBucket(serviceID); err != nil {
 			return err
+		}
+
+		// Delete all events for the service
+		var eventsToDeleteIDs [][]byte
+		err = eb.ForEach(func(id, _ []byte) error {
+			evb := eb.Bucket(id)
+			event := new(events.Event)
+			if err := event.FromBucket(evb); err != nil {
+				return err
+			}
+			if event.Service == intID {
+				eventsToDeleteIDs = append(eventsToDeleteIDs, id)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		for _, id := range eventsToDeleteIDs {
+			if err = eb.DeleteBucket(id); err != nil {
+				fmt.Printf("Error deleting event with ID %v\n", id)
+				return err
+			}
 		}
 
 		// Find the token entry and delete it from service-tokens bucket

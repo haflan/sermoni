@@ -58,24 +58,27 @@ function getServices(successHandler, errorHandler) {
     });
 }
 
-// TODO: Expected status 201 (and set 201 server-side)
 function postService(service, successHandler, errorHandler) {
     request({
         url: "/services",
         method: "POST",
+        expectedStatus: 201,
         data: service,
         success: successHandler,
         error: errorHandler
     });
 }
 
-function deleteService(id) {
-
+function deleteService(id, successHandler, errorHandler) {
+    request({
+        url: "/services/" + id,
+        method: "DELETE",
+        success: successHandler,
+        error: errorHandler
+    });
 }
 
 /***** Event management *****/
-
-// (TODO)
 
 function getEvents(successHandler, errorHandler) {
     request({

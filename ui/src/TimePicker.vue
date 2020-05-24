@@ -43,7 +43,6 @@
         },
         methods: {
             update(prop, e) {
-                console.log(e)
                 const newValue = this.value;
                 newValue[prop] = e.target.value;
                 this.$emit("input", newValue);

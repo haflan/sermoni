@@ -109,6 +109,7 @@ func reportEvent(w http.ResponseWriter, r *http.Request) {
 		events.Delete(firstEventID)
 		log.Printf("MaxNumberEvents reached for service %v. Deleting first event, %v", service.ID, firstEventID)
 	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 func generateLateEvent(s *services.Service) *events.Event {

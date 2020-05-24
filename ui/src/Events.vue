@@ -1,6 +1,6 @@
 <template>
     <div class="events-wrapper">
-        <div v-for="e in events">
+        <div v-for="e in events" :key="e.id">
             <div class="event"
                  style="display: flex;"
                 :style="e.style">
@@ -50,7 +50,7 @@
                         );
                     },
                     error => {
-                        console.error(error)
+                        console.error(error);
                         this.$emit("error");
                     }
                 ); 

@@ -43,7 +43,7 @@ func GetAll() []*Event {
 		return b.ForEach(func(id, _ []byte) error {
 			eb := b.Bucket(id)
 			event := new(Event)
-			if err := event.fromBucket(eb); err != nil {
+			if err := event.FromBucket(eb); err != nil {
 				return err
 			}
 			events = append(events, event)
@@ -125,7 +125,7 @@ func (event *Event) toBucket(eb *bbolt.Bucket) error {
 
 // Reads data from the given bucket into the fields of event
 // Returns error if any of the fields cannot be found
-func (event *Event) fromBucket(eb *bbolt.Bucket) error {
+func (event *Event) FromBucket(eb *bbolt.Bucket) error {
 	var id, service, timestamp []byte
 	var status, title, details []byte
 	err := errors.New("missing field from database")
