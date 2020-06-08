@@ -5,18 +5,8 @@ import (
 	"os"
 	"sermoni/internal/config"
 	"sermoni/internal/database"
-	"strconv"
 	"testing"
 )
-
-// intID gets uint64 from bytes
-func intID(id []byte) uint64 {
-	idInt, err := strconv.ParseUint(string(id), 10, 64)
-	if err != nil {
-		return 0
-	}
-	return idInt
-}
 
 func (s1 *Service) equals(s2 *Service) bool {
 	switch {

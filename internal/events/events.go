@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"sermoni/internal/database"
-	"strconv"
 
 	"go.etcd.io/bbolt"
 )
@@ -84,7 +83,7 @@ func Add(event *Event) error {
 		if err != nil {
 			return err
 		}
-		id := []byte(strconv.FormatUint(idInt, 10))
+		id := database.Uint64ToBytes(idInt)
 		event.ID = idInt
 
 		// Create the event bucket and fill it with data from event

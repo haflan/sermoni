@@ -1,10 +1,10 @@
 package database
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -68,15 +68,15 @@ func GetDB() *bbolt.DB {
 // often repeated for IDs. It is assumed that the data will parse successfully
 // (i.e. type checking is performed in an earlier stage).
 // If the parsing fails, the function therefore panics
-func BytesToUint64(byteData []byte) uint64 {
-	uint64Data, err := strconv.ParseUint(string(byteData), 10, 64)
-	check(err)
-	return uint64Data
+func BytesToUint64(b []byte) uint64 {
+	return binary.BigEndian.Uint64(b)
 }
 
 // Uint64ToBytes converts a uint64 formatted number to a byte array
-func Uint64ToBytes(uint64Data uint64) []byte {
-	return []byte(strconv.FormatUint(uint64Data, 10))
+func Uint64ToBytes(ui64 uint64) (b []byte) {
+	b = make([]byte, 8)
+	binary.BigEndian.PutUint64(b, ui64)
+	return
 }
 
 // PrintBucket simply prints the K-V pairs in the bucket

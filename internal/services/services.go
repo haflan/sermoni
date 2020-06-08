@@ -1,12 +1,12 @@
 package services
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
 	"sermoni/internal/database"
 	"sermoni/internal/events"
-	"strconv"
 
 	"go.etcd.io/bbolt"
 )
@@ -43,7 +43,9 @@ func GetByToken(token string) *Service {
 // GetByID returns the service structure associated with the given uint64-formatted
 // service ID, if that service exists. Otherwise returns nil
 func GetByID(id uint64) *Service {
-	return get([]byte(strconv.FormatUint(id, 10)))
+	idb := make([]byte, 8)
+	binary.BigEndian.PutUint64(idb, id)
+	return get(idb)
 }
 
 // GetAll returns all services in the database (TODO)
@@ -78,7 +80,7 @@ func GetAll() []*Service {
 // Delete deletes the given service if it exists, and all events for said service, if any
 func Delete(intID uint64) error {
 	db := database.GetDB()
-	serviceID := []byte(strconv.FormatUint(intID, 10))
+	serviceID := database.Uint64ToBytes(intID)
 	return db.Update(func(tx *bbolt.Tx) (err error) {
 		sb := tx.Bucket(database.BucketKeyServices)
 		stb := tx.Bucket(database.BucketKeyServiceTokens)
@@ -167,7 +169,7 @@ func Add(service *Service) error {
 		if serviceIDint, err = b.NextSequence(); err != nil {
 			return err
 		}
-		serviceID = []byte(strconv.FormatUint(serviceIDint, 10))
+		serviceID = database.Uint64ToBytes(serviceIDint)
 		if sb, err = b.CreateBucket(serviceID); err != nil {
 			return err
 		}
@@ -177,11 +179,11 @@ func Add(service *Service) error {
 		if err = sb.Put(keyServiceDescription, []byte(service.Description)); err != nil {
 			return err
 		}
-		periodStr := strconv.FormatUint(service.ExpectationPeriod, 10)
+		periodStr := database.Uint64ToBytes(service.ExpectationPeriod)
 		if err = sb.Put(keyServicePeriod, []byte(periodStr)); err != nil {
 			return err
 		}
-		maxEventsStr := strconv.FormatUint(service.MaxNumberEvents, 10)
+		maxEventsStr := database.Uint64ToBytes(service.MaxNumberEvents)
 		if err = sb.Put(keyServiceMaxEvents, []byte(maxEventsStr)); err != nil {
 			return err
 		}
@@ -198,7 +200,6 @@ func Add(service *Service) error {
 // fromBucket populates the service struct with data from the given service bucket
 // TODO: Consider failing on missing fields and generally choosing an approach more similar to Event.fromBucket
 func (service *Service) fromBucket(id []byte, sb *bbolt.Bucket) {
-	// Ignoring this error, because it shouldn't be possible
 	idInt := database.BytesToUint64(id)
 	service.ID = idInt
 	if name := sb.Get(keyServiceName); name != nil {
@@ -208,26 +209,10 @@ func (service *Service) fromBucket(id []byte, sb *bbolt.Bucket) {
 		service.Description = string(description)
 	}
 	if period := sb.Get(keyServicePeriod); period != nil {
-		// Quick fix: Convert to string, then int
-		// Uses default value 0 if an error occurs
-		intPeriod, err := strconv.ParseUint(string(period), 10, 64)
-		if err == nil {
-			service.ExpectationPeriod = intPeriod
-		} else {
-			log.Println("Couldn't convert period to int for service")
-			service.ExpectationPeriod = 0
-		}
+		service.ExpectationPeriod = database.BytesToUint64(period)
 	}
 	if maxevents := sb.Get(keyServiceMaxEvents); maxevents != nil {
-		// Quick fix: Convert to string, then int
-		// Uses default value 0 if an error occurs
-		intMaxEvents, err := strconv.ParseUint(string(maxevents), 10, 64)
-		if err == nil {
-			service.MaxNumberEvents = intMaxEvents
-		} else {
-			log.Println("Couldn't convert max num events to int for service")
-			service.MaxNumberEvents = 0
-		}
+		service.MaxNumberEvents = database.BytesToUint64(maxevents)
 	}
 }
 
