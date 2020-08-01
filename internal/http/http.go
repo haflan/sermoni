@@ -27,6 +27,7 @@ func StartServer(port int) {
 	router.HandleFunc("/", homeHandler)
 	router.HandleFunc("/init", initHandler).Methods(http.MethodGet)
 	router.HandleFunc("/login", loginHandler).Methods(http.MethodPost)
+	router.HandleFunc("/setup", setupHandler).Methods(http.MethodGet)
 	router.Handle("/logout", auth(logoutHandler))
 
 	router.Handle("/services", auth(getServices)).Methods(http.MethodGet)
