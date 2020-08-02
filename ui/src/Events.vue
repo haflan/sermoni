@@ -2,8 +2,9 @@
     <div class="events-wrapper">
         <div v-for="e in events" :key="e.id">
             <div class="event"
-                 style="display: flex;"
-                :style="e.style">
+                 style="display:flex;cursor:pointer;"
+                :style="e.style"
+                @click="e.open = !e.open">
                 <div class="event-field">{{ e.service }}</div>
                 <!-- TODO: Include VueMQ
                 <!--<mq-layout mq="md+">-->
@@ -11,7 +12,11 @@
                 <!--</mq-layout>-->
                 <button v-show="e.id > 0" @click="deleteEvent(e.id)">&times;</button>
             </div>
-            <div v-show="false"> more info here </div>
+            <div v-show="e.open" style="padding: 5px; border: 1px solid rgba(0,0,0,.125); border-top: 0">
+                <code>
+                    {{e.details}}
+                </code>
+            </div>
         </div>
     </div>
 </template>
@@ -22,7 +27,7 @@
         name: "Events",
         data() {
             return {
-                loadedEvents: [],
+                events: [],
                 statusStyling: {
                     "ok": { color: "black", backgroundColor: "#c3e6cb" },
                     "warning": { color: "black", backgroundColor: "#ffeeba" },
@@ -78,23 +83,18 @@
                 return inFuture ? "now" : "just now";
             }
         },
-        computed: {
-            events() {
-                // Vue needs unique indices, so late events get negative IDs
-                let lateId = 0;
-                return this.loadedEvents.map(e => {
-                    return {
-                        ...e,
-                        id: e.id ? e.id : lateId--,
-                        style: this.statusStyle(e.status)
-                    };
-                });
-            }
-        },
         mounted() {
             api.getEvents(
                 successData => {
-                    this.loadedEvents = successData.sort(this.eventSorter);
+                    let lateId = 0;
+                    this.events = successData.map(e => {
+                        return {
+                            ...e,
+                            id: e.id ? e.id : lateId--,
+                            style: this.statusStyle(e.status),
+                            open: false
+                        }
+                    }).sort(this.eventSorter);
                 },
                 error => {
                     console.error(error);
