@@ -1,21 +1,22 @@
 <template>
     <div class="services-wrapper">
         <div class="service" v-for="service in services" :key="service.id">
-            {{ service.id }} : <br/>
+            <span>Service ID:</span>
+            <input type="text" :value="service.id"> <br/>
 
-            <span>Token</span>
+            <span>Token:</span>
             <input :type="showPasswords ? 'text' : 'password'" :value="service.token"/> <br/>
 
-            <span>Name</span>
+            <span>Name:</span>
             <input type="text" :value="service.name"/> <br/>
 
-            <span>Description</span>
+            <span>Description:</span>
             <input type="text" :value="service.description"/> <br/>
 
-            <span>Max number of events</span>
+            <span>Max number of events:</span>
             <input type="number" :value="service.maxevents"/> <br/>
 
-            <span>Expectation period</span>
+            <span>Expectation period:</span>
             <time-picker :value="service.period"/> <br/>
 
             <button @click="deletionID = service.id">Delete</button>
@@ -52,7 +53,7 @@
                     period: {"number": 0, "scalar": 0},
                     maxevents: 0
                 },
-                showPasswords: true,
+                showPasswords: false,
                 deletionID: 0,
             }
         },

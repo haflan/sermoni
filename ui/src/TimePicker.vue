@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="display: flex;">
         <input type="number" @input="update('number', $event)" :value="number"/>
         <select @input="update('scalar', $event)" :value="scalar">
             <option v-for="u in units" 

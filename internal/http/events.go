@@ -119,7 +119,7 @@ func generateLateEvent(s *services.Service) *events.Event {
 		Timestamp: now(),
 		Status:    "late",
 		Title:     "Expectation not met",
-		Details: s.Name + " has failed to report within the expected internal." +
+		Details: s.Name + " has failed to report within the expected interval. " +
 			"Something is probably wrong.",
 		ServiceName: s.Name,
 	}

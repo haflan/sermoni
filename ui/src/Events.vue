@@ -9,7 +9,7 @@
                 <!--<mq-layout mq="md+">-->
                     <div class="event-field">{{ simplifyDate(e.timestamp) }}</div>
                 <!--</mq-layout>-->
-                <button v-show="e.id" @click="deleteEvent(e.id)">&times;</button>
+                <button v-show="e.id > 0" @click="deleteEvent(e.id)">&times;</button>
             </div>
             <div v-show="false"> more info here </div>
         </div>
@@ -80,9 +80,12 @@
         },
         computed: {
             events() {
+                // Vue needs unique indices, so late events get negative IDs
+                let lateId = 0;
                 return this.loadedEvents.map(e => {
                     return {
                         ...e,
+                        id: e.id ? e.id : lateId--,
                         style: this.statusStyle(e.status)
                     };
                 });
