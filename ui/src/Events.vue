@@ -13,9 +13,7 @@
                 <button v-show="e.id > 0" @click="deleteEvent(e.id)">&times;</button>
             </div>
             <div v-show="e.open" style="padding: 5px; border: 1px solid rgba(0,0,0,.125); border-top: 0">
-                <code>
-                    {{e.details}}
-                </code>
+                <code style="white-space:pre;">{{e.details}}</code>
             </div>
         </div>
     </div>
