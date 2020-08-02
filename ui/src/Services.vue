@@ -1,11 +1,16 @@
 <template>
     <div class="services-wrapper">
+
+        <button @click="showTokens = !showTokens">
+            {{showTokens ? 'Hide' : 'Show'}} tokens
+        </button>
+
         <div class="service" v-for="service in services" :key="service.id">
             <span>Service ID:</span>
             <input type="text" :value="service.id"> <br/>
 
             <span>Token:</span>
-            <input :type="showPasswords ? 'text' : 'password'" :value="service.token"/> <br/>
+            <input :type="showTokens ? 'text' : 'password'" :value="service.token"/> <br/>
 
             <span>Name:</span>
             <input type="text" :value="service.name"/> <br/>
@@ -23,13 +28,16 @@
             <button @click="updateService(service.id)">Update</button>
         </div>
 
-        <input :type="showPasswords ? 'text' : 'password'" v-model="newService.token" placeholder="Token"> <br/>
-        <input type="text" v-model="newService.name" placeholder="Name"> <br/>
-        <input type="text" v-model="newService.description" placeholder="Description"> <br/>
-        <input type="number" v-model.number="newService.maxevents" placeholder="Max number of events"> <br/>
-        <time-picker v-model="newService.period" placeholder="Expectation Period"/> <br/>
+        <div class="service">
+            <span>Add service</span>
+            <input :type="showTokens ? 'text' : 'password'" v-model="newService.token" placeholder="Token"> <br/>
+            <input type="text" v-model="newService.name" placeholder="Name"> <br/>
+            <input type="text" v-model="newService.description" placeholder="Description"> <br/>
+            <input type="number" v-model.number="newService.maxevents" placeholder="Max number of events"> <br/>
+            <time-picker v-model="newService.period" placeholder="Expectation Period"/> <br/>
 
-        <button @click="addService">Add service</button>
+            <button @click="addService">Add service</button>
+        </div>
         <div v-show="deletionID" style="position: fixed; bottom: 15px; right: 15px;">
             <button @click="deletionID = 0">Cancel</button>
             <button @click="deleteService()">Confirm</button>
@@ -53,7 +61,7 @@
                     period: {"number": 0, "scalar": 0},
                     maxevents: 0
                 },
-                showPasswords: false,
+                showTokens: false,
                 deletionID: 0,
             }
         },
