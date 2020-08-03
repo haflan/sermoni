@@ -6,10 +6,7 @@
 #     OR might want to make that the responsibility of the script being called.
 #   - On error, format the details like cronic does
 
-# Based on CRONIC
-# | Cronic v3 - cron job report wrapper
-# | Copyright 2007-2016 Chuck Houpt. No rights reserved, whatsoever.
-# | Public Domain CC0: http://creativecommons.org/publicdomain/zero/1.0/
+# Based on cronic: https://habilis.net/cronic/
 
 set -e
 
@@ -71,13 +68,7 @@ else
     status=ok
 fi
 
-echo "$json"
+sermonicli report $SERVICEID $status "$title" "$details"
+ "$json"
 
 rm -rf "$TMP"
-
-# Consider moving this part to dedicated smreport script:
-sermoni=http://localhost:8080
-token="$(cat $HOME/.sermoni-token):$SERVICEID"
-JSONDATA="{\"status\": \"$status\", \"title\": \"$title\", \"details\": $details}"
-echo "$JSONDATA"
-curl -H "Service-Token: $token" -d "$JSONDATA" $sermoni/events
