@@ -18,8 +18,7 @@ var setupScriptTemplate = template.Must(template.New("setupScript").Parse(`#/bin
 # The easiest way to set up services is to run the following as root / su:
 # $ . <(curl -fsSL {{.HostName}}/setup)
 
-# Generate this on server, based on host name:
-sermoni={{.HostName}}
+sermoni=https://{{.HostName}}
 
 ### Create unique token unless one exists
 if [ ! -f $HOME/.sermoni-token ]; then
@@ -43,7 +42,7 @@ INSTALL_DIR=$BIN_DIR # Use first path from $PATH
 cat <<- 'EOF' > $INSTALL_DIR/sermonicli
 #!/bin/bash
 
-sermoni={{.HostName}}
+sermoni=https://{{.HostName}}
 TOKEN="$(cat $HOME/.sermoni-token)"
 
 # Prompt for password until the correct one is given
@@ -184,9 +183,11 @@ if [ $RESULT -ne 0 -o -s "$ERR" ]; then
     fi
     details=$(json_escape "$(cat $FULLDETAILS)")
     status=error
+    title="'$(basename $2)' failed"
 else
     details=$(json_escape "$(cat $OUT)")
     status=ok
+    title="'$(basename $2)' finished successfully"
 fi
 
 sermonicli report $SERVICEID $status "$title" "$details"

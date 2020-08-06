@@ -10,6 +10,7 @@
                 <!--<mq-layout mq="md+">-->
                     <div class="event-field">{{ simplifyDate(e.timestamp) }}</div>
                 <!--</mq-layout>-->
+                <div class="event-field">{{ e.title }}</div>
                 <button v-show="e.id > 0" class="delete-button">&times;</button>
             </div>
             <div v-show="e.open" style="padding: 5px; border: 1px solid rgba(0,0,0,.125); border-top: 0">
