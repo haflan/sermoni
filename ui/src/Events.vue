@@ -4,13 +4,13 @@
             <div class="event"
                  style="display:flex;cursor:pointer;"
                 :style="e.style"
-                @click="e.open = !e.open">
+                @click="eventClicked(e, $event)">
                 <div class="event-field">{{ e.service }}</div>
                 <!-- TODO: Include VueMQ
                 <!--<mq-layout mq="md+">-->
                     <div class="event-field">{{ simplifyDate(e.timestamp) }}</div>
                 <!--</mq-layout>-->
-                <button v-show="e.id > 0" @click="deleteEvent(e.id)">&times;</button>
+                <button v-show="e.id > 0" class="delete-button">&times;</button>
             </div>
             <div v-show="e.open" style="padding: 5px; border: 1px solid rgba(0,0,0,.125); border-top: 0">
                 <code style="white-space:pre;">{{e.details}}</code>
@@ -45,10 +45,19 @@
                     return { color: "#000", backgroundColor: "#fff" };
                 }
             },
+            eventClicked(e, clickEvent) {
+                if (clickEvent.target.className === "delete-button") {
+                    // Element clicked is the delete button
+                    this.deleteEvent(e.id);
+                } else {
+                    // Not the delete button - toggle details
+                    e.open = !e.open;
+                }
+            },
             deleteEvent(id) {
                 api.deleteEvent(id, 
                     success => {
-                        this.loadedEvents = this.loadedEvents.filter(
+                        this.events = this.events.filter(
                             e => e.id !== id
                         );
                     },
