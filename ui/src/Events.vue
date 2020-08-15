@@ -13,7 +13,7 @@
                 <div class="event-field">{{ e.title }}</div>
                 <button v-show="e.id > 0" class="delete-button">&times;</button>
             </div>
-            <div v-show="e.open" style="padding: 5px; border: 1px solid rgba(0,0,0,.125); border-top: 0">
+            <div v-show="e.open" style="padding: 5px; border: 1px solid rgba(0,0,0,.125); border-top: 0; overflow: auto">
                 <code style="white-space:pre;">{{e.details}}</code>
             </div>
         </div>
