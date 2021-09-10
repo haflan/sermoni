@@ -170,6 +170,7 @@ if [ $RESULT -ne 0 -o -s "$ERR" ]; then
         details="Details written to $FULLDETAILS"
     else
         details=$(json_escape "$(cat ${FULLDETAILS})")
+        rm -rf "$TMP"
     fi
     status=error
     title="'$(basename $2)' failed"
@@ -178,6 +179,7 @@ else
         details="Details written to $OUT"
     else
         details=$(json_escape "$(cat ${OUT})")
+        rm -rf "$TMP"
     fi
     status=ok
     title="'$(basename $2)' finished successfully"
@@ -185,8 +187,6 @@ fi
 
 
 sermonicli report $SERVICEID $status "$title" "$details"
-
-rm -rf "$TMP"
 
 EOF
 
