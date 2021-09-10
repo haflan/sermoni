@@ -166,14 +166,23 @@ if [ $RESULT -ne 0 -o -s "$ERR" ]; then
         out "TRACE-ERROR OUTPUT:"
         out $(cat "$TRACE")
     fi
-    details=$(json_escape "$(cat $FULLDETAILS)")
+    if [ -n "$NO_DETAILS" ]; then
+        details="Details written to $FULLDETAILS"
+    else
+        details=$(json_escape "$(cat ${FULLDETAILS})")
+    fi
     status=error
     title="'$(basename $2)' failed"
 else
-    details=$(json_escape "$(cat $OUT)")
+    if [ -n "$NO_DETAILS" ]; then
+        details="Details written to $OUT"
+    else
+        details=$(json_escape "$(cat ${OUT})")
+    fi
     status=ok
     title="'$(basename $2)' finished successfully"
 fi
+
 
 sermonicli report $SERVICEID $status "$title" "$details"
 
