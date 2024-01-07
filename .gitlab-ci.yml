@@ -1,6 +1,0 @@
-build:
-  script:
-    - docker build --no-cache -t d.haflan.dev/general/sermoni:latest .
-    - docker push d.haflan.dev/general/sermoni
-  only:
-    - master
