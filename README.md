@@ -1,5 +1,7 @@
 # sermoni
 
+![Sermoni screenshot](sermoni.png)
+
 `sermoni` is a service monitor that is intended to solve the following problems 
 in the simplest way possible:
 
